@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CooCoo — Animated Gerald</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f0e6; padding: 24px; color: #2a2a2a; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
+
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; padding: 12px; background: white; border-radius: 12px; }
+  .btn { padding: 8px 14px; font-size: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-family: inherit; }
+  .btn:hover { background: #f5f5f5; }
+  .btn.active { background: #2a2a2a; color: white; border-color: #2a2a2a; }
+  .btn.primary { background: #378ADD; color: white; border-color: #378ADD; margin-left: auto; }
+
+  .stage { background: white; border-radius: 16px; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; margin-bottom: 16px; }
+  .gerald-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; background: linear-gradient(135deg, #fff8eb, #ffe9c8); border-radius: 20px; padding: 24px; }
+  .gerald-quote { margin-top: 16px; font-size: 16px; font-style: italic; color: #5a4a3a; text-align: center; min-height: 24px; }
+  .gerald-state { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+
+  .info h2 { font-size: 16px; margin-bottom: 8px; }
+  .info p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 10px; }
+  .info ul { font-size: 12px; color: #555; line-height: 1.7; padding-left: 18px; }
+  .info ul li { margin-bottom: 4px; }
+  .info code { background: #f5f0e6; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+
+  .sample-row { display: flex; gap: 12px; flex-wrap: wrap; background: white; border-radius: 16px; padding: 20px; }
+  .sample { flex: 1; min-width: 140px; text-align: center; background: #fafafa; border-radius: 12px; padding: 16px 8px; }
+  .sample-svg { display: flex; justify-content: center; height: 100px; align-items: center; }
+  .sample-label { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
+  .sample-quote { font-size: 10px; color: #888; font-style: italic; margin-top: 2px; }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1, 1); }
+    50% { transform: scale(1.03, 0.97); }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: rotate(0) translateY(0); }
+    15% { transform: rotate(-10deg) translateY(-4px); }
+    30% { transform: rotate(10deg) translateY(-4px); }
+    45% { transform: rotate(-8deg) translateY(-4px); }
+    60% { transform: rotate(8deg) translateY(-4px); }
+    75% { transform: rotate(-5deg) translateY(-2px); }
+  }
+  @keyframes peck {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(10px) rotate(12deg); }
+  }
+  @keyframes head-tilt {
+    0%, 100% { transform: rotate(0) translateX(0); }
+    25% { transform: rotate(-4deg) translateX(-2px); }
+    75% { transform: rotate(4deg) translateX(2px); }
+  }
+  @keyframes blink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    94%, 98% { transform: scaleY(0.05); }
+  }
+  @keyframes wing-flap {
+    0%, 100% { transform: rotate(0); }
+    50% { transform: rotate(-25deg); }
+  }
+  @keyframes sleep-zzz {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translate(20px, -30px) scale(1.4); }
+  }
+  @keyframes belly-breathe {
+    0%, 100% { ry: 22; }
+    50% { ry: 24; }
+  }
+  @keyframes pupil-dart {
+    0%, 30%, 60%, 100% { transform: translate(0, 0); }
+    40% { transform: translate(-2px, 1px); }
+    70% { transform: translate(2px, -1px); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🐦 CooCoo — meet animated Gerald</h1>
+  <div class="subtitle">He breathes. He blinks. His eyes dart around. He's <em>alive.</em></div>
+
+  <div class="controls">
+    <button class="btn active" data-state="idle" onclick="setState('idle')">😐 idle</button>
+    <button class="btn" data-state="thinking" onclick="setState('thinking')">🤔 thinking</button>
+    <button class="btn" data-state="waiting" onclick="setState('waiting')">🚨 panic</button>
+    <button class="btn" data-state="sleepy" onclick="setState('sleepy')">💤 sleepy</button>
+    <button class="btn" data-state="done" onclick="setState('done')">✅ done</button>
+    <button class="btn primary" onclick="playSequence()">▶ play full sequence</button>
+  </div>
+
+  <div class="stage">
+    <div class="gerald-stage">
+      <div id="gerald-container"></div>
+      <div class="gerald-quote" id="gerald-quote">"hm."</div>
+      <div class="gerald-state" id="gerald-state">— IDLE</div>
+    </div>
+
+    <div class="info">
+      <h2>What's animating</h2>
+      <p id="animation-desc">When idle, Gerald has a slow continuous breathing motion. His belly expands and contracts. Every 4–6 seconds he blinks. Every so often his eyes dart left or right, like he's actually watching something. Subtle but it makes him feel <em>aware</em>.</p>
+      <ul id="animation-list">
+        <li><code>belly-breathe</code> — body ellipse ry oscillates by ±2px on 3s loop</li>
+        <li><code>blink</code> — both eyes scale to 0 vertically every 4.5s</li>
+        <li><code>pupil-dart</code> — pupils translate ±2px to glance around</li>
+        <li><code>head-tilt</code> — head rotates ±4° on a long lazy cycle</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sample-row">
+    <div class="sample"><div class="sample-svg" id="s-idle"></div><div class="sample-label">idle</div><div class="sample-quote">breathing</div></div>
+    <div class="sample"><div class="sample-svg" id="s-thinking"></div><div class="sample-label">thinking</div><div class="sample-quote">pecking</div></div>
+    <div class="sample"><div class="sample-svg" id="s-waiting"></div><div class="sample-label">panic</div><div class="sample-quote">shaking</div></div>
+    <div class="sample"><div class="sample-svg" id="s-sleepy"></div><div class="sample-label">sleepy</div><div class="sample-quote">zzz drifting</div></div>
+    <div class="sample"><div class="sample-svg" id="s-done"></div><div class="sample-label">done</div><div class="sample-quote">happy bob</div></div>
+  </div>
+
+  <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 16px;">
+    <h2 style="font-size: 16px; margin-bottom: 12px;">Animation layers (how it's built)</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px; color: #555;">
+      <div>
+        <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">1. Continuous (always on)</div>
+        <div style="line-height: 1.6;">Breathing belly, blinking, pupil dart. Makes Gerald feel alive in any state.</div>
+      </div>
+      <div>
+        <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">2. Idle-only</div>
+        <div style="line-height: 1.6;">Slow head tilt left/right. Gentle vertical bob.</div>
+      </div>
+      <div>
+        <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">3. State motion</div>
+        <div style="line-height: 1.6;">Shake (panic), peck (thinking), zzz drift (sleepy), happy bob (done).</div>
+      </div>
+      <div>
+        <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">4. Transitions</div>
+        <div style="line-height: 1.6;">Wings spread out instantly on panic. Eyes shift smoothly between expressions.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function buildGerald(state, opts = {}) {
+  const size = opts.size || 220;
+  const inSample = opts.inSample || false;
+
+  let eyeLeftContent, eyeRightContent, beak, brows = '', wings = '', extras = '';
+  let bodyAnim, headAnim, geraldAnim;
+
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.2s ease-in-out infinite;';
+    headAnim = 'animation: head-tilt 6s ease-in-out infinite;';
+    geraldAnim = 'animation: bob 3.2s ease-in-out infinite;';
+    eyeLeftContent = `
+      <circle cx="82" cy="66" r="13" fill="white"/>
+      <g style="transform-origin: 82px 68px; animation: pupil-dart 5s ease-in-out infinite;">
+        <circle cx="82" cy="68" r="6" fill="#1a1a1a"/>
+        <circle cx="84" cy="65" r="2.5" fill="white"/>
+      </g>
+      <ellipse cx="82" cy="66" rx="13" ry="13" fill="#8aa0b2" style="transform-origin: 82px 66px; animation: blink 4.5s infinite;"/>`;
+    eyeRightContent = `
+      <circle cx="118" cy="66" r="13" fill="white"/>
+      <g style="transform-origin: 118px 68px; animation: pupil-dart 5s ease-in-out infinite;">
+        <circle cx="118" cy="68" r="6" fill="#1a1a1a"/>
+        <circle cx="120" cy="65" r="2.5" fill="white"/>
+      </g>
+      <ellipse cx="118" cy="66" rx="13" ry="13" fill="#8aa0b2" style="transform-origin: 118px 66px; animation: blink 4.5s infinite;"/>`;
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 1.8s ease-in-out infinite;';
+    headAnim = 'animation: peck 0.9s ease-in-out infinite;';
+    geraldAnim = '';
+    eyeLeftContent = `<circle cx="82" cy="66" r="12" fill="white"/><ellipse cx="82" cy="68" rx="3.5" ry="7" fill="#1a1a1a"/><circle cx="83" cy="64" r="2" fill="white"/>`;
+    eyeRightContent = `<circle cx="118" cy="66" r="12" fill="white"/><ellipse cx="118" cy="68" rx="3.5" ry="7" fill="#1a1a1a"/><circle cx="119" cy="64" r="2" fill="white"/>`;
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    brows = '<path d="M 64 54 L 96 50" stroke="#3a3a3a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 104 50 L 136 54" stroke="#3a3a3a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="148" y="40" font-size="24" style="animation: bob 1.8s ease-in-out infinite;">💭</text>';
+  } else if (state === 'waiting') {
+    bodyAnim = '';
+    headAnim = '';
+    geraldAnim = 'animation: shake 0.35s ease-in-out infinite;';
+    eyeLeftContent = `
+      <circle cx="78" cy="60" r="20" fill="white" stroke="#1a1a1a" stroke-width="2"/>
+      <g style="transform-origin: 80px 64px; animation: pupil-dart 0.4s ease-in-out infinite;">
+        <circle cx="80" cy="64" r="8" fill="#1a1a1a"/>
+        <circle cx="83" cy="60" r="3" fill="white"/>
+      </g>`;
+    eyeRightContent = `
+      <circle cx="122" cy="60" r="20" fill="white" stroke="#1a1a1a" stroke-width="2"/>
+      <g style="transform-origin: 120px 64px; animation: pupil-dart 0.4s ease-in-out infinite;">
+        <circle cx="120" cy="64" r="8" fill="#1a1a1a"/>
+        <circle cx="123" cy="60" r="3" fill="white"/>
+      </g>`;
+    beak = '<polygon points="92,86 130,90 92,98" fill="#f4a261"/><ellipse cx="118" cy="103" rx="10" ry="6" fill="#2a1a1a"><animate attributeName="ry" values="4;7;4" dur="0.3s" repeatCount="indefinite"/></ellipse>';
+    wings = `<path d="M 56 110 Q 14 95 12 140 Q 40 125 60 128 Z" fill="#5a7282" style="transform-origin: 60px 110px; animation: wing-flap 0.25s ease-in-out infinite;"/>
+             <path d="M 144 110 Q 186 95 188 140 Q 160 125 140 128 Z" fill="#5a7282" style="transform-origin: 140px 110px; animation: wing-flap 0.25s ease-in-out infinite reverse;"/>`;
+    extras = '<text x="14" y="44" font-size="42" fill="#e24b4a" font-weight="900">!</text><text x="158" y="44" font-size="42" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4s ease-in-out infinite;';
+    headAnim = '';
+    geraldAnim = '';
+    eyeLeftContent = '<path d="M 68 64 Q 82 56 96 64" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    eyeRightContent = '<path d="M 104 64 Q 118 56 132 64" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    extras = `
+      <text x="145" y="40" font-size="18" fill="#7F77DD" style="animation: sleep-zzz 2.4s ease-out infinite;">z</text>
+      <text x="145" y="40" font-size="18" fill="#7F77DD" style="animation: sleep-zzz 2.4s ease-out infinite; animation-delay: 0.8s;">Z</text>
+      <text x="145" y="40" font-size="18" fill="#7F77DD" style="animation: sleep-zzz 2.4s ease-out infinite; animation-delay: 1.6s;">z</text>`;
+  } else if (state === 'done') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    headAnim = '';
+    geraldAnim = 'animation: bob 0.8s ease-in-out infinite;';
+    eyeLeftContent = '<path d="M 68 66 Q 82 54 96 66" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    eyeRightContent = '<path d="M 104 66 Q 118 54 132 66" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    extras = `<text x="155" y="44" font-size="24" style="animation: bob 0.8s ease-in-out infinite;">🍞</text>
+              <text x="14" y="42" font-size="20" style="animation: bob 1.2s ease-in-out infinite;">✨</text>`;
+  }
+
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" style="display:block; ${geraldAnim}">
+    <ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/>
+    ${wings}
+    <ellipse cx="100" cy="130" rx="62" ry="50" fill="#6b8294" style="transform-origin: 100px 130px; ${bodyAnim}"/>
+    <ellipse cx="100" cy="126" rx="54" ry="42" fill="#8aa0b2"/>
+    <ellipse cx="100" cy="142" rx="40" ry="22" fill="#a8bcc8"/>
+    <g style="transform-origin: 100px 100px; ${headAnim}">
+      <ellipse cx="100" cy="72" rx="44" ry="42" fill="#6b8294"/>
+      <ellipse cx="100" cy="68" rx="38" ry="36" fill="#8aa0b2"/>
+      <ellipse cx="116" cy="108" rx="14" ry="6" fill="#9b59b6" opacity="0.4"/>
+      <ellipse cx="116" cy="111" rx="11" ry="4" fill="#3498db" opacity="0.35"/>
+      ${eyeLeftContent}
+      ${eyeRightContent}
+      ${brows}
+      ${beak}
+    </g>
+    <line x1="86" y1="174" x2="86" y2="190" stroke="#f4a261" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="114" y1="174" x2="114" y2="190" stroke="#f4a261" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="82" y1="190" x2="76" y2="193" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="86" y1="190" x2="86" y2="195" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="90" y1="190" x2="96" y2="193" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="110" y1="190" x2="104" y2="193" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="114" y1="190" x2="114" y2="195" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="118" y1="190" x2="124" y2="193" stroke="#f4a261" stroke-width="3.5" stroke-linecap="round"/>
+    ${extras}
+  </svg>`;
+}
+
+const stateInfo = {
+  idle: { quote: '"hm."', label: '— IDLE',
+    desc: 'When idle, Gerald has a slow continuous breathing motion. His belly expands and contracts. Every 4–5 seconds he blinks. His pupils dart left/right occasionally, like he\'s actually watching something. His head tilts gently. Subtle but it makes him feel <em>aware</em>.',
+    layers: ['<code>belly-breathe</code> — body ellipse ry oscillates ±2px on 3.2s loop', '<code>blink</code> — eyelid (matching skin tone) covers eyes briefly every 4.5s', '<code>pupil-dart</code> — pupils translate ±2px occasionally', '<code>head-tilt</code> — head rotates ±4° on 6s lazy cycle', '<code>bob</code> — whole body floats up/down 4px'] },
+  thinking: { quote: '"peck peck peck..."', label: '— THINKING',
+    desc: 'Gerald is pecking at invisible keys. His head bobs down and forward repeatedly — short, fast, focused. Eyes narrow into slits with raised eyebrows. A thought bubble bobs above him. Belly breathes faster.',
+    layers: ['<code>peck</code> — head translates 10px down + rotates 12° every 0.9s', '<code>belly-breathe</code> — faster, 1.8s cycle (excited breathing)', '<code>bob</code> on thought bubble — bobs in sync with head', 'Slit pupils + raised brows replace round eyes'] },
+  waiting: { quote: '"COO COO!! OI!! HOOMAN!!"', label: '— 🚨 PANIC',
+    desc: 'EVERYTHING SHAKES. Eyes go huge and wide. Pupils dart back and forth rapidly. Wings flap out furiously. Beak opens and closes (animated <code>ry</code>). Red exclamation marks on both sides. The whole pigeon vibrates at 0.35s.',
+    layers: ['<code>shake</code> — entire body rotates ±10° at 0.35s', '<code>wing-flap</code> — both wings rotate out at 0.25s', '<code>pupil-dart</code> — fast at 0.4s (terrified scanning)', 'Beak opens via animated <code>ry</code> — actually screaming'] },
+  sleepy: { quote: '"zzz... wake me when... zzz..."', label: '— SLEEPY',
+    desc: 'Long task running. Gerald has given up watching and dozed off. Eyes closed (happy arcs). Belly breathes slowly, deeply (4s cycle). Three zzz letters rise diagonally and fade, staggered.',
+    layers: ['<code>belly-breathe</code> — slow 4s cycle (deep sleep)', '<code>sleep-zzz</code> — staggered z, Z, z floating up/right and fading', 'Eyes closed permanently as curved arcs', 'Head animations paused (he\'s out)'] },
+  done: { quote: '"done. bread now?"', label: '— DONE',
+    desc: 'Task complete. Gerald is happy and demanding payment. Bouncy fast bob (0.8s). Happy curved eyes. A bread emoji bobs next to him in sync. Sparkle on the other side. Quick energetic breathing.',
+    layers: ['<code>bob</code> — fast 0.8s bounce (excited)', '<code>belly-breathe</code> — 2.4s cycle (relaxed satisfied)', 'Bread emoji bobs in sync', 'Sparkle on left for celebration'] }
+};
+
+function setState(name) {
+  document.querySelectorAll('.btn[data-state]').forEach(b => {
+    b.classList.toggle('active', b.dataset.state === name);
+  });
+  const info = stateInfo[name];
+  document.getElementById('gerald-container').innerHTML = buildGerald(name, { size: 220 });
+  document.getElementById('gerald-quote').textContent = info.quote;
+  document.getElementById('gerald-state').textContent = info.label;
+  document.getElementById('animation-desc').innerHTML = info.desc;
+  document.getElementById('animation-list').innerHTML = info.layers.map(l => '<li>' + l + '</li>').join('');
+}
+
+function renderSamples() {
+  ['idle', 'thinking', 'waiting', 'sleepy', 'done'].forEach(st => {
+    document.getElementById('s-' + st).innerHTML = buildGerald(st, { size: 90, inSample: true });
+  });
+}
+
+function playSequence() {
+  const seq = ['idle', 'thinking', 'sleepy', 'waiting', 'done', 'idle'];
+  seq.forEach((s, i) => setTimeout(() => setState(s), i * 2500));
+}
+
+setState('idle');
+renderSamples();
+</script>
+</body>
+</html>

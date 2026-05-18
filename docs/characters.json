@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "characters": [
+    {
+      "id": "pigeon",
+      "defaultName": "Gerald",
+      "appBrandName": "CooCoo",
+      "species": "pigeon",
+      "sound": "coo",
+      "soundProfile": {
+        "waveform": "sine",
+        "baseFreq": 380,
+        "duration": 0.5,
+        "notes": 2,
+        "pitchBend": [[0.08, 0.85], [0.2, 0.95], [0.35, 0.7]]
+      },
+      "colors": {
+        "primary": "#6b8294",
+        "secondary": "#8aa0b2",
+        "accent": "#f4a261",
+        "heroBg": ["#fff8eb", "#ffe9c8"],
+        "notifBg": "#ffe9e9"
+      },
+      "voice": {
+        "idle": "\"hm.\"",
+        "thinking": "\"peck peck peck...\"",
+        "waiting": "\"COO COO!! OI!! HOOMAN!!\"",
+        "sleepy": "\"zzz... wake me when... zzz...\"",
+        "done": "\"done. bread now?\""
+      },
+      "personality": "Grumpy. Watchful. Speaks in coos and demands bread when work is done."
+    },
+    {
+      "id": "dog",
+      "defaultName": "BooBoo",
+      "appBrandName": "BorkBork",
+      "species": "dog",
+      "sound": "bark",
+      "soundProfile": {
+        "waveform": "square",
+        "baseFreq": 250,
+        "duration": 0.15,
+        "notes": 3,
+        "pitchBend": [[0.05, 0.8]]
+      },
+      "colors": {
+        "primary": "#c89968",
+        "secondary": "#d4a878",
+        "accent": "#a67c52",
+        "heroBg": ["#fef3e2", "#ffd9a8"],
+        "notifBg": "#ffe6cc"
+      },
+      "voice": {
+        "idle": "*tail wagging gently*",
+        "thinking": "*head tilt* huh??",
+        "waiting": "BORK!! BORK BORK BORK!!",
+        "sleepy": "*belly up, snoring*",
+        "done": "YAY!! TREATS?? TREATS NOW??"
+      },
+      "personality": "Enthusiastic. Loving. Treats every Claude prompt like you just came home from work."
+    },
+    {
+      "id": "cat",
+      "defaultName": "Mr. Whiskers",
+      "appBrandName": "Meowmeow",
+      "species": "cat",
+      "sound": "meow",
+      "soundProfile": {
+        "waveform": "sawtooth",
+        "baseFreq": 600,
+        "duration": 0.7,
+        "notes": 1,
+        "pitchBend": [[0.2, 1.4], [0.6, 0.8]]
+      },
+      "colors": {
+        "primary": "#3a3a3a",
+        "secondary": "#525252",
+        "accent": "#ff9bb3",
+        "heroBg": ["#f0e6ff", "#d9c7f0"],
+        "notifBg": "#f0e6ff"
+      },
+      "voice": {
+        "idle": "*slow blink, judging you*",
+        "thinking": "*staring at wall*",
+        "waiting": "meoooowww. now. NOW.",
+        "sleepy": "*loaf mode, eyes closed*",
+        "done": "*knocks task off table*"
+      },
+      "personality": "Aloof. Judgmental. Will help, but wants you to know it's beneath them."
+    },
+    {
+      "id": "frog",
+      "defaultName": "Kermit Jr.",
+      "appBrandName": "RibbitRibbit",
+      "species": "frog",
+      "sound": "ribbit",
+      "soundProfile": {
+        "waveform": "square",
+        "baseFreq": 180,
+        "duration": 0.2,
+        "notes": 2,
+        "pitchBend": [[0.1, 1.3]]
+      },
+      "colors": {
+        "primary": "#5fa050",
+        "secondary": "#7fc070",
+        "accent": "#a0d090",
+        "heroBg": ["#e6f5e0", "#c4e8b3"],
+        "notifBg": "#e6f5e0"
+      },
+      "voice": {
+        "idle": "*peaceful blink*",
+        "thinking": "ribbit... ribbit...",
+        "waiting": "RIBBIT! RIBBIT! RIBBIT!",
+        "sleepy": "*half-submerged*",
+        "done": "ribbit. (it is done.)"
+      },
+      "personality": "Chill. Zen. Sees the work as it is. Speaks only in ribbits."
+    },
+    {
+      "id": "raccoon",
+      "defaultName": "Bandit",
+      "appBrandName": "TrashGoblin",
+      "species": "raccoon",
+      "sound": "chitter",
+      "soundProfile": {
+        "waveform": "triangle",
+        "baseFreq": 800,
+        "duration": 0.06,
+        "notes": 6,
+        "pitchBend": []
+      },
+      "colors": {
+        "primary": "#7a7a7a",
+        "secondary": "#9a9a9a",
+        "accent": "#1a1a1a",
+        "heroBg": ["#e0e0e6", "#bfbfd1"],
+        "notifBg": "#e0e0e6"
+      },
+      "voice": {
+        "idle": "*rummaging in bins*",
+        "thinking": "*washing something suspicious*",
+        "waiting": "OI! pst! OVER HERE!! 👀",
+        "sleepy": "*passed out in trash*",
+        "done": "haha got em. snacks?"
+      },
+      "personality": "Sneaky. Mischievous. Steals your attention with chaos energy."
+    },
+    {
+      "id": "duck",
+      "defaultName": "Quackers",
+      "appBrandName": "QuackQuack",
+      "species": "duck",
+      "sound": "quack",
+      "soundProfile": {
+        "waveform": "sawtooth",
+        "baseFreq": 320,
+        "duration": 0.15,
+        "notes": 2,
+        "pitchBend": [[0.05, 0.7]]
+      },
+      "colors": {
+        "primary": "#f7d959",
+        "secondary": "#fae477",
+        "accent": "#ff8a3d",
+        "heroBg": ["#fff8d4", "#ffe89a"],
+        "notifBg": "#fff8d4"
+      },
+      "voice": {
+        "idle": "quack. (a casual quack)",
+        "thinking": "quack quack quack...",
+        "waiting": "QUACK!! QUACK!! HEY!!",
+        "sleepy": "*head tucked under wing*",
+        "done": "QUACK! (i did that.)"
+      },
+      "personality": "Confident. Loud. Has opinions about everything and shares them."
+    }
+  ],
+  "states": [
+    {
+      "id": "idle",
+      "headline": "on watch",
+      "color": "#aaa",
+      "description": "No activity, just watching"
+    },
+    {
+      "id": "thinking",
+      "headline": "Claude is working",
+      "color": "#f4a261",
+      "description": "Claude is using a tool (PreToolUse hook fired)"
+    },
+    {
+      "id": "waiting",
+      "headline": "needs you",
+      "color": "#e24b4a",
+      "description": "Claude needs user input (Notification hook fired) — alert state"
+    },
+    {
+      "id": "sleepy",
+      "headline": "long task",
+      "color": "#7F77DD",
+      "description": "Task has been running >30s without state change"
+    },
+    {
+      "id": "done",
+      "headline": "task complete",
+      "color": "#97c459",
+      "description": "Claude finished responding (Stop hook fired)"
+    }
+  ]
+}

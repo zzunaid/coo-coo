@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Companion — Character system</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f0e6;
+    --card: #ffffff;
+    --text: #2a2a2a;
+    --text-muted: #6a6a6a;
+    --text-dim: #9a9a9a;
+    --border: #e8e0d0;
+    --accent: #378ADD;
+    --danger: #e24b4a;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); padding: 24px; color: var(--text); line-height: 1.5; }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+
+  header { margin-bottom: 24px; }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+  .controls { position: sticky; top: 16px; z-index: 100; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 16px; background: white; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+  .controls-label { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-family: inherit; color: var(--text); transition: all 0.15s; }
+  .btn:hover { background: var(--bg); }
+  .btn.active { background: var(--text); color: white; border-color: var(--text); }
+  .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn.sound { margin-left: auto; background: #fff8eb; border-color: #f4a261; }
+
+  section { margin-bottom: 32px; }
+  .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .section-num { font-size: 11px; font-weight: 700; color: var(--text-dim); }
+  .section-title { font-size: 18px; font-weight: 600; }
+  .section-desc { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+
+  .picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .picker-card { background: white; border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; }
+  .picker-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+  .picker-card.selected { border-color: var(--accent); background: #eef5ff; }
+  .picker-card.selected::after { content: '✓'; position: absolute; top: 6px; right: 8px; width: 18px; height: 18px; background: var(--accent); color: white; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .picker-svg { display: flex; justify-content: center; align-items: center; height: 80px; }
+  .picker-name { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 6px; }
+  .picker-sound { font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+
+  .hero-card { background: linear-gradient(135deg, var(--hero-bg-1, #fff8eb), var(--hero-bg-2, #ffe9c8)); border-radius: 20px; padding: 32px; display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: center; transition: background 0.4s; }
+  .hero-pigeon { display: flex; justify-content: center; align-items: center; }
+  .hero-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hero-name { font-size: 38px; font-weight: 800; letter-spacing: -1px; }
+  .rename-btn { font-size: 11px; padding: 4px 10px; border: 1px solid #5a4a3a; background: transparent; border-radius: 999px; color: #5a4a3a; cursor: pointer; }
+  .rename-btn:hover { background: rgba(0,0,0,0.05); }
+  .hero-quote { font-size: 18px; font-style: italic; color: #5a4a3a; margin-top: 6px; min-height: 26px; }
+  .hero-state-badge { display: inline-block; font-size: 10px; font-weight: 700; color: white; background: #5a4a3a; padding: 4px 10px; border-radius: 999px; margin-top: 10px; letter-spacing: 0.8px; }
+  .hero-personality { font-size: 13px; color: #5a4a3a; margin-top: 12px; line-height: 1.6; font-style: italic; }
+
+  .voice-card { background: white; border-radius: 14px; padding: 18px; }
+  .voice-card-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+  .voice-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f5f0e6; }
+  .voice-row:last-child { border-bottom: none; }
+  .voice-state { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; min-width: 70px; }
+  .voice-line { flex: 1; font-size: 13px; color: var(--text); font-style: italic; }
+
+  .surfaces { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .surface-card { background: white; border-radius: 14px; padding: 16px; }
+  .surface-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+  .menubar-mini { background: rgba(40,40,40,0.92); padding: 5px 10px; display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.9); font-size: 11px; border-radius: 6px; justify-content: flex-end; }
+  .menubar-mini-icon { width: 18px; height: 18px; }
+
+  .floating-mini { background: rgba(255,255,255,0.98); border-radius: 14px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.15); transition: all 0.3s; border: 0.5px solid rgba(0,0,0,0.08); }
+  .floating-mini-svg { width: 36px; height: 36px; flex-shrink: 0; }
+  .floating-mini .label { font-size: 10px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .floating-mini .msg { font-size: 9px; color: var(--text-muted); margin-top: 1px; font-style: italic; line-height: 1.3; }
+  .floating-mini.pulse-red { animation: pulse-red-shadow 0.9s ease-in-out infinite; }
+
+  .island-mini { background: #1a1a1a; border-radius: 999px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+  .island-mini-svg { width: 18px; height: 18px; }
+  .island-mini .label { font-size: 10px; color: white; font-weight: 500; flex: 1; text-align: center; }
+  .island-mini .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  .home-mini { background: white; border-radius: 16px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s; border: 2px solid transparent; }
+  .home-mini-name { font-size: 9px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .home-mini-svg { display: flex; justify-content: center; padding: 4px 0; }
+  .home-mini-status { font-size: 10px; font-weight: 700; text-align: center; }
+  .home-mini-msg { font-size: 9px; color: var(--text-muted); text-align: center; font-style: italic; }
+
+  .notif-mini { background: rgba(255,255,255,0.96); border-radius: 14px; padding: 10px; display: flex; gap: 8px; }
+  .notif-mini-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-mini-app { font-size: 9px; font-weight: 800; color: var(--text); letter-spacing: 0.3px; }
+  .notif-mini-title { font-size: 11px; font-weight: 600; color: var(--text); margin-top: 1px; }
+  .notif-mini-body { font-size: 9px; color: var(--text-muted); margin-top: 1px; line-height: 1.3; font-style: italic; }
+
+  .config-card { background: white; border-radius: 14px; padding: 18px; }
+  .config-row { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 8px 0; align-items: center; border-bottom: 1px solid #f5f0e6; }
+  .config-row:last-child { border-bottom: none; }
+  .config-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .config-input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: var(--bg); width: 100%; }
+  .config-help { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  @keyframes belly-breathe { 0%,100% { ry: 50; } 50% { ry: 52; } }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes shake { 0%,100% { transform: rotate(0) translateY(0); } 20% { transform: rotate(-12deg) translateY(-4px); } 40% { transform: rotate(12deg) translateY(-4px); } 60% { transform: rotate(-10deg) translateY(-4px); } 80% { transform: rotate(10deg) translateY(-4px); } }
+  @keyframes peck { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(8px) rotate(10deg); } }
+  @keyframes head-tilt { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+  @keyframes blink { 0%,92%,100% { transform: scaleY(1); } 94%,98% { transform: scaleY(0.05); } }
+  @keyframes wing-flap { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-25deg); } }
+  @keyframes sleep-zzz { 0% { opacity: 0; transform: translate(0,0) scale(0.5); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(20px,-30px) scale(1.4); } }
+  @keyframes pupil-dart { 0%,30%,60%,100% { transform: translate(0,0); } 40% { transform: translate(-2px,1px); } 70% { transform: translate(2px,-1px); } }
+  @keyframes pulse-red-shadow { 0%,100% { box-shadow: 0 6px 20px rgba(226,75,74,0.4); } 50% { box-shadow: 0 6px 32px rgba(226,75,74,0.9); } }
+  @keyframes tail-wag { 0%,100% { transform: rotate(0); } 50% { transform: rotate(30deg); } }
+  @keyframes ear-twitch { 0%,90%,100% { transform: rotate(0); } 95% { transform: rotate(-15deg); } }
+  @keyframes hop { 0%,100% { transform: translateY(0); } 30% { transform: translateY(-12px); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🎭 Companion — character system</h1>
+    <div class="subtitle">Pick your animal. Name it. The whole app changes — sounds, voice, personality.</div>
+  </header>
+
+  <div class="controls">
+    <span class="controls-label">state</span>
+    <button class="btn active" data-state="idle" onclick="setState('idle')">😐 idle</button>
+    <button class="btn" data-state="thinking" onclick="setState('thinking')">🤔 thinking</button>
+    <button class="btn" data-state="waiting" onclick="setState('waiting')">🚨 panic</button>
+    <button class="btn" data-state="sleepy" onclick="setState('sleepy')">💤 sleepy</button>
+    <button class="btn" data-state="done" onclick="setState('done')">✅ done</button>
+    <button class="btn primary" onclick="playSequence()">▶ play sequence</button>
+    <button class="btn sound" onclick="playSound()">🔊 sound</button>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Pick your companion</span>
+      <span class="section-desc">Each one has its own voice, sound, color palette, and personality</span>
+    </div>
+    <div class="picker-grid" id="picker-grid"></div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Your companion, up close</span>
+      <span class="section-desc">Live preview — try different states</span>
+    </div>
+    <div class="hero-card" id="hero-card">
+      <div class="hero-pigeon" id="hero-pigeon"></div>
+      <div>
+        <div class="hero-name-row">
+          <div class="hero-name" id="hero-name">Gerald</div>
+          <button class="rename-btn" onclick="renameCompanion()">✎ rename</button>
+        </div>
+        <div class="hero-quote" id="hero-quote">"hm."</div>
+        <div class="hero-state-badge" id="hero-badge">IDLE</div>
+        <div class="hero-personality" id="hero-personality">Grumpy. Watchful. Speaks in coos and demands bread when work is done.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Voice — how they react in each state</span>
+      <span class="section-desc">Every character has its own dialogue</span>
+    </div>
+    <div class="voice-card">
+      <div class="voice-card-title">All 5 states in <span id="voice-name">CooCoo</span>'s voice</div>
+      <div id="voice-rows"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Across every surface</span>
+      <span class="section-desc">Same character, all your devices</span>
+    </div>
+    <div class="surfaces">
+      <div class="surface-card">
+        <div class="surface-label">macOS menubar</div>
+        <div class="menubar-mini">
+          <span class="menubar-mini-icon" id="surf-menubar"></span>
+          <span id="surf-menubar-suffix"></span>
+          <span style="opacity:0.7;">5:42</span>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-label">Floating widget</div>
+        <div class="floating-mini" id="surf-floating">
+          <div class="floating-mini-svg" id="surf-floating-svg"></div>
+          <div>
+            <div class="label" id="surf-floating-label">on watch</div>
+            <div class="msg" id="surf-floating-msg">"hm."</div>
+          </div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-label">Dynamic Island</div>
+        <div style="background: #000; padding: 14px; border-radius: 14px;">
+          <div class="island-mini" id="surf-island">
+            <div class="island-mini-svg" id="surf-island-svg"></div>
+            <div class="label" id="surf-island-label">on watch</div>
+            <div class="dot" id="surf-island-dot" style="background:#555;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-label">Home widget</div>
+        <div style="background: linear-gradient(135deg,#e8d5b7,#d4a574); padding: 14px; border-radius: 14px;">
+          <div class="home-mini" id="surf-home">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <span class="home-mini-name" id="surf-home-name">Gerald</span>
+              <span style="width:8px; height:8px; border-radius:50%; background:#aaa;" id="surf-home-dot"></span>
+            </div>
+            <div class="home-mini-svg" id="surf-home-svg"></div>
+            <div class="home-mini-status" id="surf-home-status">on watch</div>
+            <div class="home-mini-msg" id="surf-home-msg">"hm."</div>
+          </div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-label">Push notification</div>
+        <div style="background: linear-gradient(160deg,#1a1a2e,#16213e); padding: 14px; border-radius: 14px;">
+          <div class="notif-mini">
+            <div class="notif-mini-icon" id="surf-notif-icon" style="background:#ffe9e9;">
+              <div id="surf-notif-svg" style="width:28px; height:28px;"></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div class="notif-mini-app" id="surf-notif-app">COOCOO</div>
+              <div class="notif-mini-title" id="surf-notif-title">🚨 COO COO!!</div>
+              <div class="notif-mini-body" id="surf-notif-body">Claude needs your input.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-label">Lock screen activity</div>
+        <div style="background: linear-gradient(160deg,#1a1a2e,#16213e); padding: 16px; border-radius: 14px;">
+          <div style="background: rgba(255,255,255,0.13); backdrop-filter: blur(20px); border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; border: 0.5px solid rgba(255,255,255,0.15);">
+            <div id="surf-lock-svg" style="width:36px; height:36px; flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:8px; color:rgba(255,255,255,0.6); font-weight:700; letter-spacing:1px;" id="surf-lock-app">🐦 COOCOO</div>
+              <div style="font-size:11px; color:#fff; font-weight:600;" id="surf-lock-title">on watch</div>
+              <div style="font-size:9px; color:rgba(255,255,255,0.8); font-style:italic;" id="surf-lock-msg">"hm."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Settings — make it yours</span>
+      <span class="section-desc">User-facing customization panel</span>
+    </div>
+    <div class="config-card">
+      <div class="config-row">
+        <div class="config-label">Character</div>
+        <div>
+          <select class="config-input" id="config-char" onchange="setCompanion(this.value)">
+            <option value="pigeon">🐦 CooCoo (pigeon)</option>
+            <option value="dog">🐕 BooBoo (dog)</option>
+            <option value="cat">🐈 Mr. Whiskers (cat)</option>
+            <option value="frog">🐸 Kermit Jr. (frog)</option>
+            <option value="raccoon">🦝 Bandit (raccoon)</option>
+            <option value="duck">🦆 Quackers (duck)</option>
+          </select>
+          <div class="config-help">Each character has its own design, sound, voice, and color palette.</div>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="config-label">Display name</div>
+        <div>
+          <input type="text" class="config-input" id="config-name" value="Gerald" oninput="updateName(this.value)" />
+          <div class="config-help">Show up in notifications and the menubar app. Defaults vary by character.</div>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="config-label">Alert sound</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select class="config-input" id="config-sound" style="flex:1;">
+            <option>Default (matches character)</option>
+            <option>System sound</option>
+            <option>Silent</option>
+          </select>
+          <button class="btn" onclick="playSound()">▶ test</button>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="config-label">Personality</div>
+        <div>
+          <select class="config-input">
+            <option>Default (character preset)</option>
+            <option>Wholesome</option>
+            <option>Sassy</option>
+            <option>Chaotic</option>
+            <option>Stoic</option>
+          </select>
+          <div class="config-help">Overrides the default dialogue lines while keeping the character's voice.</div>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="config-label">Triggers</div>
+        <div style="font-size: 12px; color: var(--text); line-height: 1.8;">
+          <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox" checked> When Claude needs input <span style="color:var(--text-dim);">(panic state)</span></label>
+          <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox" checked> When tasks complete <span style="color:var(--text-dim);">(done state)</span></label>
+          <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox"> Show during long tasks <span style="color:var(--text-dim);">(sleepy state)</span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// CHARACTER DEFINITIONS
+const characters = {
+  pigeon: {
+    defaultName: 'Gerald',
+    appName: 'CooCoo',
+    species: 'pigeon',
+    sound: 'coo',
+    heroBg: ['#fff8eb', '#ffe9c8'],
+    personality: 'Grumpy. Watchful. Speaks in coos and demands bread when work is done.',
+    voice: {
+      idle: '"hm."',
+      thinking: '"peck peck peck..."',
+      waiting: '"COO COO!! OI!! HOOMAN!!"',
+      sleepy: '"zzz... wake me when... zzz..."',
+      done: '"done. bread now?"'
+    },
+    notifColor: '#ffe9e9'
+  },
+  dog: {
+    defaultName: 'BooBoo',
+    appName: 'BorkBork',
+    species: 'dog',
+    sound: 'bark',
+    heroBg: ['#fef3e2', '#ffd9a8'],
+    personality: 'Enthusiastic. Loving. Treats every Claude prompt like you just came home from work.',
+    voice: {
+      idle: '*tail wagging gently*',
+      thinking: '*head tilt* huh??',
+      waiting: 'BORK!! BORK BORK BORK!!',
+      sleepy: '*belly up, snoring*',
+      done: 'YAY!! TREATS?? TREATS NOW??'
+    },
+    notifColor: '#ffe6cc'
+  },
+  cat: {
+    defaultName: 'Mr. Whiskers',
+    appName: 'Meowmeow',
+    species: 'cat',
+    sound: 'meow',
+    heroBg: ['#f0e6ff', '#d9c7f0'],
+    personality: 'Aloof. Judgmental. Will help, but wants you to know it\'s beneath them.',
+    voice: {
+      idle: '*slow blink, judging you*',
+      thinking: '*staring at wall*',
+      waiting: 'meoooowww. now. NOW.',
+      sleepy: '*loaf mode, eyes closed*',
+      done: '*knocks task off table*'
+    },
+    notifColor: '#f0e6ff'
+  },
+  frog: {
+    defaultName: 'Kermit Jr.',
+    appName: 'RibbitRibbit',
+    species: 'frog',
+    sound: 'ribbit',
+    heroBg: ['#e6f5e0', '#c4e8b3'],
+    personality: 'Chill. Zen. Sees the work as it is. Speaks only in ribbits.',
+    voice: {
+      idle: '*peaceful blink*',
+      thinking: 'ribbit... ribbit...',
+      waiting: 'RIBBIT! RIBBIT! RIBBIT!',
+      sleepy: '*half-submerged*',
+      done: 'ribbit. (it is done.)'
+    },
+    notifColor: '#e6f5e0'
+  },
+  raccoon: {
+    defaultName: 'Bandit',
+    appName: 'TrashGoblin',
+    species: 'raccoon',
+    sound: 'chitter',
+    heroBg: ['#e0e0e6', '#bfbfd1'],
+    personality: 'Sneaky. Mischievous. Steals your attention with chaos energy.',
+    voice: {
+      idle: '*rummaging in bins*',
+      thinking: '*washing something suspicious*',
+      waiting: 'OI! pst! OVER HERE!! 👀',
+      sleepy: '*passed out in trash*',
+      done: 'haha got em. snacks?'
+    },
+    notifColor: '#e0e0e6'
+  },
+  duck: {
+    defaultName: 'Quackers',
+    appName: 'QuackQuack',
+    species: 'duck',
+    sound: 'quack',
+    heroBg: ['#fff8d4', '#ffe89a'],
+    personality: 'Confident. Loud. Has opinions about everything and shares them.',
+    voice: {
+      idle: 'quack. (a casual quack)',
+      thinking: 'quack quack quack...',
+      waiting: 'QUACK!! QUACK!! HEY!!',
+      sleepy: '*head tucked under wing*',
+      done: 'QUACK! (i did that.)'
+    },
+    notifColor: '#fff8d4'
+  }
+};
+
+const states = {
+  idle: { headline: 'on watch', badge: 'IDLE', notifTitle: 'still watching' },
+  thinking: { headline: 'pecking at keys', badge: 'THINKING', notifTitle: 'Claude is working' },
+  waiting: { headline: '🚨 NEEDS YOU', badge: '🚨 PANIC', notifTitle: '🚨 ALERT' },
+  sleepy: { headline: 'snoozing', badge: 'SLEEPY', notifTitle: '💤 napping' },
+  done: { headline: 'task complete', badge: 'DONE', notifTitle: '✅ Done' }
+};
+
+let currentCompanion = 'pigeon';
+let currentState = 'idle';
+let customName = null;
+
+// CHARACTER ART
+function buildCharacter(species, state, size) {
+  const s = size || 200;
+  if (species === 'pigeon') return buildPigeon(state, s);
+  if (species === 'dog') return buildDog(state, s);
+  if (species === 'cat') return buildCat(state, s);
+  if (species === 'frog') return buildFrog(state, s);
+  if (species === 'raccoon') return buildRaccoon(state, s);
+  if (species === 'duck') return buildDuck(state, s);
+}
+
+function buildPigeon(state, s) {
+  let eyes, beak, brows = '', wings = '', extras = '', bodyAnim = '', headAnim = '', geraldAnim = '';
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.2s ease-in-out infinite;';
+    headAnim = 'animation: head-tilt 6s ease-in-out infinite;';
+    geraldAnim = 'animation: bob 3.2s ease-in-out infinite;';
+    eyes = `<circle cx="82" cy="66" r="13" fill="white"/><g style="transform-origin:82px 68px; animation:pupil-dart 5s infinite;"><circle cx="82" cy="68" r="6" fill="#1a1a1a"/><circle cx="84" cy="65" r="2.5" fill="white"/></g><ellipse cx="82" cy="66" rx="13" ry="13" fill="#8aa0b2" style="transform-origin:82px 66px; animation:blink 4.5s infinite;"/><circle cx="118" cy="66" r="13" fill="white"/><g style="transform-origin:118px 68px; animation:pupil-dart 5s infinite;"><circle cx="118" cy="68" r="6" fill="#1a1a1a"/><circle cx="120" cy="65" r="2.5" fill="white"/></g><ellipse cx="118" cy="66" rx="13" ry="13" fill="#8aa0b2" style="transform-origin:118px 66px; animation:blink 4.5s infinite;"/>`;
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 1.8s ease-in-out infinite;';
+    headAnim = 'animation: peck 0.9s ease-in-out infinite;';
+    eyes = `<circle cx="82" cy="66" r="12" fill="white"/><ellipse cx="82" cy="68" rx="3.5" ry="7" fill="#1a1a1a"/><circle cx="118" cy="66" r="12" fill="white"/><ellipse cx="118" cy="68" rx="3.5" ry="7" fill="#1a1a1a"/>`;
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    brows = '<path d="M 64 54 L 96 50" stroke="#3a3a3a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 104 50 L 136 54" stroke="#3a3a3a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="148" y="40" font-size="24" style="animation:bob 1.8s infinite;">💭</text>';
+  } else if (state === 'waiting') {
+    geraldAnim = 'animation: shake 0.35s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="60" r="20" fill="white" stroke="#1a1a1a" stroke-width="2"/><g style="transform-origin:80px 64px; animation:pupil-dart 0.4s infinite;"><circle cx="80" cy="64" r="8" fill="#1a1a1a"/></g><circle cx="122" cy="60" r="20" fill="white" stroke="#1a1a1a" stroke-width="2"/><g style="transform-origin:120px 64px; animation:pupil-dart 0.4s infinite;"><circle cx="120" cy="64" r="8" fill="#1a1a1a"/></g>`;
+    beak = '<polygon points="92,86 130,90 92,98" fill="#f4a261"/><ellipse cx="118" cy="103" rx="10" ry="6" fill="#2a1a1a"><animate attributeName="ry" values="4;7;4" dur="0.3s" repeatCount="indefinite"/></ellipse>';
+    wings = `<path d="M 56 110 Q 14 95 12 140 Q 40 125 60 128 Z" fill="#5a7282" style="transform-origin:60px 110px; animation:wing-flap 0.25s infinite;"/><path d="M 144 110 Q 186 95 188 140 Q 160 125 140 128 Z" fill="#5a7282" style="transform-origin:140px 110px; animation:wing-flap 0.25s infinite reverse;"/>`;
+    extras = '<text x="14" y="44" font-size="42" fill="#e24b4a" font-weight="900">!</text><text x="158" y="44" font-size="42" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4s ease-in-out infinite;';
+    eyes = '<path d="M 68 64 Q 82 56 96 64" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M 104 64 Q 118 56 132 64" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    extras = '<text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    geraldAnim = 'animation: bob 0.8s ease-in-out infinite;';
+    eyes = '<path d="M 68 66 Q 82 54 96 66" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M 104 66 Q 118 54 132 66" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+    beak = '<polygon points="92,88 130,92 92,96" fill="#f4a261"/>';
+    extras = '<text x="155" y="44" font-size="24" style="animation:bob 0.8s infinite;">🍞</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${geraldAnim}"><ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/>${wings}<ellipse cx="100" cy="130" rx="62" ry="50" fill="#6b8294" style="transform-origin:100px 130px; ${bodyAnim}"/><ellipse cx="100" cy="126" rx="54" ry="42" fill="#8aa0b2"/><g style="transform-origin:100px 100px; ${headAnim}"><ellipse cx="100" cy="72" rx="44" ry="42" fill="#6b8294"/><ellipse cx="100" cy="68" rx="38" ry="36" fill="#8aa0b2"/><ellipse cx="116" cy="108" rx="14" ry="6" fill="#9b59b6" opacity="0.4"/>${eyes}${brows}${beak}</g><line x1="86" y1="174" x2="86" y2="190" stroke="#f4a261" stroke-width="4.5" stroke-linecap="round"/><line x1="114" y1="174" x2="114" y2="190" stroke="#f4a261" stroke-width="4.5" stroke-linecap="round"/>${extras}</svg>`;
+}
+
+function buildDog(state, s) {
+  let eyes, mouth, ears = '', tail, extras = '', bodyAnim = '', headAnim = '', dogAnim = '', tongue = '';
+  // Default tail
+  let tailAnim = '';
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.2s ease-in-out infinite;';
+    dogAnim = 'animation: bob 3.2s ease-in-out infinite;';
+    tailAnim = 'animation: tail-wag 1.5s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="78" r="6" fill="#1a1a1a"/><circle cx="120" cy="78" r="6" fill="#1a1a1a"/><circle cx="81" cy="76" r="2" fill="white"/><circle cx="121" cy="76" r="2" fill="white"/>`;
+    mouth = '<path d="M 92 102 Q 100 108 108 102" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    ears = '<path d="M 60 50 Q 50 80 70 88" fill="#a67c52"/><path d="M 140 50 Q 150 80 130 88" fill="#a67c52"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    headAnim = 'animation: head-tilt 1.2s ease-in-out infinite;';
+    tailAnim = 'animation: tail-wag 2s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="78" r="7" fill="#1a1a1a"/><circle cx="120" cy="78" r="7" fill="#1a1a1a"/><circle cx="82" cy="75" r="2.5" fill="white"/><circle cx="122" cy="75" r="2.5" fill="white"/>`;
+    mouth = '<ellipse cx="100" cy="105" rx="5" ry="3" fill="#1a1a1a"/>';
+    ears = '<path d="M 60 50 Q 50 80 70 88" fill="#a67c52"/><path d="M 140 50 Q 150 80 130 88" fill="#a67c52"/>';
+    extras = '<text x="146" y="38" font-size="22" style="animation:bob 1.5s infinite;">❓</text>';
+  } else if (state === 'waiting') {
+    dogAnim = 'animation: hop 0.4s ease-in-out infinite;';
+    tailAnim = 'animation: tail-wag 0.2s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="74" r="10" fill="white" stroke="#1a1a1a" stroke-width="1.5"/><circle cx="80" cy="76" r="5" fill="#1a1a1a"/><circle cx="122" cy="74" r="10" fill="white" stroke="#1a1a1a" stroke-width="1.5"/><circle cx="120" cy="76" r="5" fill="#1a1a1a"/>`;
+    mouth = '<ellipse cx="100" cy="108" rx="10" ry="7" fill="#1a1a1a"><animate attributeName="ry" values="4;9;4" dur="0.3s" repeatCount="indefinite"/></ellipse>';
+    tongue = '<ellipse cx="100" cy="112" rx="4" ry="5" fill="#ff6b9b"/>';
+    ears = '<path d="M 60 40 Q 45 70 70 88" fill="#a67c52" style="transform-origin:65px 70px; animation:wing-flap 0.3s infinite;"/><path d="M 140 40 Q 155 70 130 88" fill="#a67c52" style="transform-origin:135px 70px; animation:wing-flap 0.3s infinite reverse;"/>';
+    extras = '<text x="14" y="40" font-size="36" fill="#e24b4a" font-weight="900">!</text><text x="160" y="40" font-size="36" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4s ease-in-out infinite;';
+    eyes = '<path d="M 70 78 Q 80 72 90 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 78 Q 120 72 130 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M 92 105 Q 100 110 108 105" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    ears = '<path d="M 60 50 Q 50 80 70 88" fill="#a67c52"/><path d="M 140 50 Q 150 80 130 88" fill="#a67c52"/>';
+    extras = '<text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    dogAnim = 'animation: bob 0.6s ease-in-out infinite;';
+    tailAnim = 'animation: tail-wag 0.15s ease-in-out infinite;';
+    eyes = '<path d="M 70 78 Q 80 70 90 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 78 Q 120 70 130 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M 85 102 Q 100 116 115 102" stroke="#1a1a1a" stroke-width="2.5" fill="#1a1a1a" stroke-linecap="round"/>';
+    tongue = '<ellipse cx="100" cy="112" rx="5" ry="4" fill="#ff6b9b"/>';
+    ears = '<path d="M 60 50 Q 50 80 70 88" fill="#a67c52"/><path d="M 140 50 Q 150 80 130 88" fill="#a67c52"/>';
+    extras = '<text x="155" y="44" font-size="22" style="animation:bob 0.6s infinite;">🦴</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${dogAnim}"><ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/><path d="M 150 130 Q 180 120 175 145 Q 165 142 155 138 Z" fill="#a67c52" style="transform-origin:155px 135px; ${tailAnim}"/><ellipse cx="100" cy="135" rx="58" ry="46" fill="#c89968" style="transform-origin:100px 135px; ${bodyAnim}"/><ellipse cx="100" cy="132" rx="50" ry="38" fill="#d4a878"/><ellipse cx="100" cy="148" rx="36" ry="20" fill="#e8c9a0"/><g style="transform-origin:100px 100px; ${headAnim}">${ears}<ellipse cx="100" cy="84" rx="42" ry="40" fill="#c89968"/><ellipse cx="100" cy="82" rx="36" ry="34" fill="#d4a878"/>${eyes}<ellipse cx="100" cy="96" rx="6" ry="4" fill="#1a1a1a"/>${mouth}${tongue}</g><line x1="80" y1="174" x2="80" y2="190" stroke="#a67c52" stroke-width="6" stroke-linecap="round"/><line x1="120" y1="174" x2="120" y2="190" stroke="#a67c52" stroke-width="6" stroke-linecap="round"/>${extras}</svg>`;
+}
+
+function buildCat(state, s) {
+  let eyes, mouth, whiskers, ears, tail, extras = '', bodyAnim = '', headAnim = '', catAnim = '';
+  whiskers = '<line x1="60" y1="98" x2="80" y2="100" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/><line x1="60" y1="105" x2="80" y2="104" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/><line x1="120" y1="100" x2="140" y2="98" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/><line x1="120" y1="104" x2="140" y2="105" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>';
+  ears = '<path d="M 60 60 L 50 30 L 80 50 Z" fill="#1a1a1a"/><path d="M 140 60 L 150 30 L 120 50 Z" fill="#1a1a1a"/><path d="M 65 55 L 60 40 L 75 50 Z" fill="#ff9bb3"/><path d="M 135 55 L 140 40 L 125 50 Z" fill="#ff9bb3"/>';
+  
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 4s ease-in-out infinite;';
+    eyes = `<ellipse cx="80" cy="80" rx="8" ry="10" fill="#7fce28"/><ellipse cx="80" cy="82" rx="2" ry="9" fill="#1a1a1a"/><ellipse cx="120" cy="80" rx="8" ry="10" fill="#7fce28"/><ellipse cx="120" cy="82" rx="2" ry="9" fill="#1a1a1a"/><ellipse cx="80" cy="80" rx="9" ry="11" fill="#1a1a1a" style="transform-origin:80px 80px; animation:blink 5s infinite;"/><ellipse cx="120" cy="80" rx="9" ry="11" fill="#1a1a1a" style="transform-origin:120px 80px; animation:blink 5s infinite;"/>`;
+    mouth = '<path d="M 92 108 Q 100 116 108 108" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    eyes = `<ellipse cx="80" cy="80" rx="8" ry="10" fill="#7fce28"/><ellipse cx="80" cy="82" rx="1.5" ry="9" fill="#1a1a1a"/><ellipse cx="120" cy="80" rx="8" ry="10" fill="#7fce28"/><ellipse cx="120" cy="82" rx="1.5" ry="9" fill="#1a1a1a"/>`;
+    mouth = '<line x1="92" y1="110" x2="108" y2="110" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>';
+    extras = '<text x="146" y="38" font-size="22" style="animation:bob 1.8s infinite;">💭</text>';
+  } else if (state === 'waiting') {
+    catAnim = 'animation: shake 0.4s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="78" r="12" fill="#7fce28"/><circle cx="80" cy="78" r="6" fill="#1a1a1a"/><circle cx="120" cy="78" r="12" fill="#7fce28"/><circle cx="120" cy="78" r="6" fill="#1a1a1a"/>`;
+    mouth = '<ellipse cx="100" cy="110" rx="8" ry="6" fill="#1a1a1a"><animate attributeName="ry" values="3;8;3" dur="0.3s" repeatCount="indefinite"/></ellipse><ellipse cx="100" cy="113" rx="3" ry="4" fill="#ff6b9b"/>';
+    extras = '<text x="14" y="44" font-size="36" fill="#e24b4a" font-weight="900">!</text><text x="160" y="44" font-size="36" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4.5s ease-in-out infinite;';
+    eyes = '<path d="M 70 80 Q 80 74 90 80" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 80 Q 120 74 130 80" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M 92 108 Q 100 114 108 108" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    catAnim = 'animation: bob 1.2s ease-in-out infinite;';
+    eyes = '<path d="M 70 82 Q 80 74 90 82" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 82 Q 120 74 130 82" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M 92 108 Q 100 116 108 108" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="155" y="44" font-size="22">🐟</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${catAnim}"><ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/><path d="M 150 140 Q 190 130 185 100 Q 175 115 165 130 Z" fill="#3a3a3a" style="transform-origin:155px 135px; animation:tail-wag 3s infinite;"/><ellipse cx="100" cy="135" rx="58" ry="46" fill="#3a3a3a" style="transform-origin:100px 135px; ${bodyAnim}"/><ellipse cx="100" cy="132" rx="50" ry="38" fill="#525252"/><ellipse cx="100" cy="148" rx="36" ry="20" fill="#6a6a6a"/><g style="transform-origin:100px 100px; ${headAnim}">${ears}<ellipse cx="100" cy="90" rx="44" ry="40" fill="#3a3a3a"/><ellipse cx="100" cy="88" rx="38" ry="34" fill="#525252"/>${whiskers}${eyes}<polygon points="96,98 104,98 100,104" fill="#ff9bb3"/>${mouth}</g><line x1="80" y1="174" x2="80" y2="190" stroke="#3a3a3a" stroke-width="6" stroke-linecap="round"/><line x1="120" y1="174" x2="120" y2="190" stroke="#3a3a3a" stroke-width="6" stroke-linecap="round"/>${extras}</svg>`;
+}
+
+function buildFrog(state, s) {
+  let eyes, mouth, extras = '', bodyAnim = '', frogAnim = '';
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.5s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="50" r="22" fill="#7fb069"/><circle cx="122" cy="50" r="22" fill="#7fb069"/><circle cx="78" cy="50" r="18" fill="white"/><circle cx="122" cy="50" r="18" fill="white"/><circle cx="78" cy="54" r="10" fill="#1a1a1a"/><circle cx="122" cy="54" r="10" fill="#1a1a1a"/><circle cx="80" cy="50" r="3" fill="white"/><circle cx="124" cy="50" r="3" fill="white"/>`;
+    mouth = '<path d="M 70 110 Q 100 130 130 110" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="50" r="22" fill="#7fb069"/><circle cx="122" cy="50" r="22" fill="#7fb069"/><circle cx="78" cy="50" r="18" fill="white"/><circle cx="122" cy="50" r="18" fill="white"/><circle cx="78" cy="55" r="8" fill="#1a1a1a"/><circle cx="122" cy="55" r="8" fill="#1a1a1a"/>`;
+    mouth = '<line x1="80" y1="115" x2="120" y2="115" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>';
+    extras = '<text x="146" y="32" font-size="22" style="animation:bob 1.8s infinite;">💭</text>';
+  } else if (state === 'waiting') {
+    frogAnim = 'animation: hop 0.4s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="46" r="26" fill="#7fb069"/><circle cx="122" cy="46" r="26" fill="#7fb069"/><circle cx="78" cy="46" r="22" fill="white"/><circle cx="122" cy="46" r="22" fill="white"/><circle cx="80" cy="50" r="12" fill="#1a1a1a"/><circle cx="120" cy="50" r="12" fill="#1a1a1a"/>`;
+    mouth = '<ellipse cx="100" cy="118" rx="22" ry="10" fill="#1a1a1a"><animate attributeName="ry" values="5;14;5" dur="0.3s" repeatCount="indefinite"/></ellipse>';
+    extras = '<text x="10" y="40" font-size="36" fill="#e24b4a" font-weight="900">!</text><text x="162" y="40" font-size="36" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4.5s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="50" r="22" fill="#7fb069"/><circle cx="122" cy="50" r="22" fill="#7fb069"/><path d="M 60 50 Q 78 42 96 50" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 104 50 Q 122 42 140 50" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    mouth = '<line x1="80" y1="115" x2="120" y2="115" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>';
+    extras = '<text x="145" y="34" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="34" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    frogAnim = 'animation: bob 0.8s ease-in-out infinite;';
+    eyes = `<circle cx="78" cy="50" r="22" fill="#7fb069"/><circle cx="122" cy="50" r="22" fill="#7fb069"/><path d="M 60 52 Q 78 42 96 52" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M 104 52 Q 122 42 140 52" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    mouth = '<path d="M 70 110 Q 100 135 130 110" stroke="#1a1a1a" stroke-width="3" fill="#1a1a1a" stroke-linecap="round"/>';
+    extras = '<text x="155" y="42" font-size="22">🪰</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${frogAnim}"><ellipse cx="100" cy="178" rx="55" ry="6" fill="#000" opacity="0.12"/><ellipse cx="100" cy="120" rx="70" ry="55" fill="#5fa050" style="transform-origin:100px 120px; ${bodyAnim}"/><ellipse cx="100" cy="115" rx="60" ry="45" fill="#7fc070"/><ellipse cx="100" cy="135" rx="40" ry="22" fill="#a0d090"/>${eyes}${mouth}<line x1="60" y1="174" x2="50" y2="190" stroke="#5fa050" stroke-width="7" stroke-linecap="round"/><line x1="140" y1="174" x2="150" y2="190" stroke="#5fa050" stroke-width="7" stroke-linecap="round"/>${extras}</svg>`;
+}
+
+function buildRaccoon(state, s) {
+  let eyes, mouth, mask, extras = '', bodyAnim = '', raccoonAnim = '';
+  mask = '<path d="M 60 75 Q 100 65 140 75 L 140 90 Q 100 85 60 90 Z" fill="#1a1a1a"/>';
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.2s ease-in-out infinite;';
+    raccoonAnim = 'animation: bob 3.2s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="82" r="7" fill="white"/><circle cx="120" cy="82" r="7" fill="white"/><circle cx="80" cy="84" r="4" fill="#1a1a1a"/><circle cx="120" cy="84" r="4" fill="#1a1a1a"/>`;
+    mouth = '<path d="M 92 108 Q 100 114 108 108" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 2s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="82" r="7" fill="white"/><circle cx="120" cy="82" r="7" fill="white"/><ellipse cx="82" cy="84" rx="2.5" ry="5" fill="#1a1a1a"/><ellipse cx="118" cy="84" rx="2.5" ry="5" fill="#1a1a1a"/>`;
+    mouth = '<path d="M 92 108 Q 100 114 108 108" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="146" y="38" font-size="22" style="animation:bob 1.5s infinite;">🔍</text>';
+  } else if (state === 'waiting') {
+    raccoonAnim = 'animation: shake 0.35s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="80" r="11" fill="white" stroke="#1a1a1a" stroke-width="1"/><circle cx="120" cy="80" r="11" fill="white" stroke="#1a1a1a" stroke-width="1"/><circle cx="82" cy="82" r="6" fill="#1a1a1a"/><circle cx="118" cy="82" r="6" fill="#1a1a1a"/>`;
+    mouth = '<ellipse cx="100" cy="110" rx="7" ry="5" fill="#1a1a1a"><animate attributeName="ry" values="3;7;3" dur="0.3s" repeatCount="indefinite"/></ellipse>';
+    extras = '<text x="14" y="44" font-size="32" fill="#e24b4a" font-weight="900">!</text><text x="164" y="44" font-size="32" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4.5s ease-in-out infinite;';
+    eyes = '<path d="M 72 82 Q 80 76 88 82" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 112 82 Q 120 76 128 82" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<line x1="92" y1="108" x2="108" y2="108" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>';
+    extras = '<text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    raccoonAnim = 'animation: bob 0.8s ease-in-out infinite;';
+    eyes = '<path d="M 72 84 Q 80 76 88 84" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 112 84 Q 120 76 128 84" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M 88 108 Q 100 118 112 108" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    extras = '<text x="155" y="44" font-size="22">🗑️</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${raccoonAnim}"><ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/><path d="M 150 135 Q 195 125 190 165 Q 175 155 160 145 Z M 158 142 Q 175 138 180 150 M 162 150 Q 172 148 178 155" fill="#5a5a5a" stroke="#1a1a1a" stroke-width="2" style="transform-origin:160px 145px; animation:tail-wag 2.5s infinite;"/><ellipse cx="100" cy="135" rx="60" ry="48" fill="#7a7a7a" style="transform-origin:100px 135px; ${bodyAnim}"/><ellipse cx="100" cy="132" rx="52" ry="40" fill="#9a9a9a"/><ellipse cx="100" cy="148" rx="38" ry="22" fill="#bababa"/><path d="M 55 50 L 50 25 L 75 45 Z" fill="#7a7a7a"/><path d="M 145 50 L 150 25 L 125 45 Z" fill="#7a7a7a"/><ellipse cx="100" cy="90" rx="46" ry="42" fill="#7a7a7a"/><ellipse cx="100" cy="88" rx="40" ry="36" fill="#9a9a9a"/>${mask}${eyes}<ellipse cx="100" cy="100" rx="5" ry="3.5" fill="#1a1a1a"/>${mouth}<line x1="80" y1="174" x2="80" y2="190" stroke="#5a5a5a" stroke-width="6" stroke-linecap="round"/><line x1="120" y1="174" x2="120" y2="190" stroke="#5a5a5a" stroke-width="6" stroke-linecap="round"/>${extras}</svg>`;
+}
+
+function buildDuck(state, s) {
+  let eyes, beak, extras = '', bodyAnim = '', duckAnim = '', beakAnim = '';
+  if (state === 'idle') {
+    bodyAnim = 'animation: belly-breathe 3.2s ease-in-out infinite;';
+    duckAnim = 'animation: bob 3.2s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="76" r="6" fill="#1a1a1a"/><circle cx="120" cy="76" r="6" fill="#1a1a1a"/><circle cx="81" cy="74" r="2" fill="white"/><circle cx="121" cy="74" r="2" fill="white"/><ellipse cx="80" cy="76" rx="7" ry="7" fill="#ffd966" style="transform-origin:80px 76px; animation:blink 5s infinite;"/><ellipse cx="120" cy="76" rx="7" ry="7" fill="#ffd966" style="transform-origin:120px 76px; animation:blink 5s infinite;"/>`;
+    beak = '<ellipse cx="100" cy="98" rx="22" ry="11" fill="#ff8a3d"/><ellipse cx="100" cy="96" rx="20" ry="6" fill="#ffa860"/><line x1="92" y1="100" x2="108" y2="100" stroke="#cc6020" stroke-width="1"/>';
+  } else if (state === 'thinking') {
+    bodyAnim = 'animation: belly-breathe 2.4s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="76" r="7" fill="#1a1a1a"/><circle cx="120" cy="76" r="7" fill="#1a1a1a"/><circle cx="82" cy="73" r="2.5" fill="white"/><circle cx="122" cy="73" r="2.5" fill="white"/>`;
+    beak = '<ellipse cx="100" cy="98" rx="22" ry="11" fill="#ff8a3d"/><ellipse cx="100" cy="96" rx="20" ry="6" fill="#ffa860"/>';
+    extras = '<text x="146" y="36" font-size="22" style="animation:bob 1.8s infinite;">💭</text>';
+  } else if (state === 'waiting') {
+    duckAnim = 'animation: shake 0.35s ease-in-out infinite;';
+    eyes = `<circle cx="80" cy="74" r="10" fill="white" stroke="#1a1a1a" stroke-width="1"/><circle cx="120" cy="74" r="10" fill="white" stroke="#1a1a1a" stroke-width="1"/><circle cx="80" cy="76" r="5" fill="#1a1a1a"/><circle cx="120" cy="76" r="5" fill="#1a1a1a"/>`;
+    beak = '<ellipse cx="100" cy="96" rx="24" ry="6" fill="#ff8a3d"/><ellipse cx="100" cy="104" rx="24" ry="6" fill="#ff8a3d"><animate attributeName="cy" values="104;110;104" dur="0.3s" repeatCount="indefinite"/></ellipse><ellipse cx="100" cy="100" rx="20" ry="3" fill="#1a1a1a" opacity="0.3"/>';
+    extras = '<text x="14" y="44" font-size="32" fill="#e24b4a" font-weight="900">!</text><text x="164" y="44" font-size="32" fill="#e24b4a" font-weight="900">!</text>';
+  } else if (state === 'sleepy') {
+    bodyAnim = 'animation: belly-breathe 4.5s ease-in-out infinite;';
+    eyes = '<path d="M 70 78 Q 80 72 90 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 78 Q 120 72 130 78" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    beak = '<ellipse cx="100" cy="98" rx="22" ry="11" fill="#ff8a3d"/>';
+    extras = '<text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite;">z</text><text x="145" y="40" font-size="18" fill="#7F77DD" style="animation:sleep-zzz 2.4s infinite; animation-delay:0.8s;">Z</text>';
+  } else if (state === 'done') {
+    duckAnim = 'animation: bob 0.8s ease-in-out infinite;';
+    eyes = '<path d="M 70 80 Q 80 70 90 80" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M 110 80 Q 120 70 130 80" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    beak = '<ellipse cx="100" cy="98" rx="22" ry="11" fill="#ff8a3d"/><ellipse cx="100" cy="96" rx="20" ry="6" fill="#ffa860"/>';
+    extras = '<text x="155" y="42" font-size="22">🌾</text>';
+  }
+  return `<svg viewBox="0 0 200 200" width="${s}" height="${s}" style="display:block; ${duckAnim}"><ellipse cx="100" cy="178" rx="48" ry="6" fill="#000" opacity="0.12"/><ellipse cx="100" cy="135" rx="62" ry="50" fill="#f7d959" style="transform-origin:100px 135px; ${bodyAnim}"/><ellipse cx="100" cy="132" rx="54" ry="42" fill="#fae477"/><ellipse cx="100" cy="148" rx="40" ry="22" fill="#fff0a0"/><ellipse cx="100" cy="80" rx="44" ry="42" fill="#f7d959"/><ellipse cx="100" cy="78" rx="38" ry="36" fill="#fae477"/>${eyes}${beak}<line x1="80" y1="174" x2="80" y2="190" stroke="#ff8a3d" stroke-width="6" stroke-linecap="round"/><line x1="120" y1="174" x2="120" y2="190" stroke="#ff8a3d" stroke-width="6" stroke-linecap="round"/><polygon points="78,190 70,196 90,196" fill="#ff8a3d"/><polygon points="122,190 110,196 130,196" fill="#ff8a3d"/>${extras}</svg>`;
+}
+
+function setCompanion(species) {
+  currentCompanion = species;
+  customName = null;
+  document.getElementById('config-char').value = species;
+  document.getElementById('config-name').value = characters[species].defaultName;
+  document.querySelectorAll('.picker-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.species === species);
+  });
+  renderAll();
+}
+
+function updateName(name) {
+  customName = name;
+  renderAll();
+}
+
+function renameCompanion() {
+  const newName = prompt("What should we call your companion?", customName || characters[currentCompanion].defaultName);
+  if (newName) {
+    customName = newName;
+    document.getElementById('config-name').value = newName;
+    renderAll();
+  }
+}
+
+function setState(name) {
+  currentState = name;
+  document.querySelectorAll('.btn[data-state]').forEach(b => {
+    b.classList.toggle('active', b.dataset.state === name);
+  });
+  renderAll();
+  if (name === 'waiting') playSound();
+}
+
+function renderAll() {
+  const char = characters[currentCompanion];
+  const stateMeta = states[currentState];
+  const name = customName || char.defaultName;
+  const quote = char.voice[currentState];
+  
+  document.getElementById('hero-card').style.setProperty('--hero-bg-1', char.heroBg[0]);
+  document.getElementById('hero-card').style.setProperty('--hero-bg-2', char.heroBg[1]);
+  document.getElementById('hero-pigeon').innerHTML = buildCharacter(char.species, currentState, 200);
+  document.getElementById('hero-name').textContent = name;
+  document.getElementById('hero-quote').textContent = quote;
+  document.getElementById('hero-badge').textContent = stateMeta.badge;
+  document.getElementById('hero-personality').textContent = char.personality;
+  
+  document.getElementById('voice-name').textContent = char.appName;
+  const voiceHTML = Object.keys(char.voice).map(st => `
+    <div class="voice-row">
+      <span class="voice-state">${st}</span>
+      <span class="voice-line">${char.voice[st]}</span>
+    </div>
+  `).join('');
+  document.getElementById('voice-rows').innerHTML = voiceHTML;
+  
+  document.getElementById('surf-menubar').innerHTML = buildCharacter(char.species, currentState, 18);
+  document.getElementById('surf-menubar-suffix').textContent = currentState === 'waiting' ? ' 🚨' : currentState === 'done' ? ' ✓' : currentState === 'thinking' ? ' 💭' : '';
+  
+  document.getElementById('surf-floating-svg').innerHTML = buildCharacter(char.species, currentState, 36);
+  document.getElementById('surf-floating-label').textContent = stateMeta.headline;
+  document.getElementById('surf-floating-msg').textContent = quote;
+  document.getElementById('surf-floating').classList.toggle('pulse-red', currentState === 'waiting');
+  
+  document.getElementById('surf-island-svg').innerHTML = buildCharacter(char.species, currentState, 18);
+  document.getElementById('surf-island-label').textContent = stateMeta.headline;
+  document.getElementById('surf-island-dot').style.background = currentState === 'waiting' ? '#e24b4a' : currentState === 'thinking' ? '#f4a261' : currentState === 'done' ? '#97c459' : currentState === 'sleepy' ? '#7F77DD' : '#555';
+  
+  document.getElementById('surf-home-name').textContent = name;
+  document.getElementById('surf-home-svg').innerHTML = buildCharacter(char.species, currentState, 60);
+  document.getElementById('surf-home-status').textContent = stateMeta.headline;
+  document.getElementById('surf-home-msg').textContent = quote;
+  
+  document.getElementById('surf-notif-app').textContent = char.appName.toUpperCase();
+  document.getElementById('surf-notif-icon').style.background = char.notifColor;
+  document.getElementById('surf-notif-svg').innerHTML = buildCharacter(char.species, currentState, 28);
+  document.getElementById('surf-notif-title').textContent = currentState === 'waiting' ? `🚨 ${name} is yelling!` : stateMeta.notifTitle;
+  document.getElementById('surf-notif-body').textContent = quote;
+  
+  document.getElementById('surf-lock-app').textContent = '🐾 ' + char.appName.toUpperCase();
+  document.getElementById('surf-lock-svg').innerHTML = buildCharacter(char.species, currentState, 36);
+  document.getElementById('surf-lock-title').textContent = stateMeta.headline;
+  document.getElementById('surf-lock-msg').textContent = quote;
+}
+
+function renderPicker() {
+  const html = Object.keys(characters).map(species => {
+    const c = characters[species];
+    return `
+      <div class="picker-card ${species === 'pigeon' ? 'selected' : ''}" data-species="${species}" onclick="setCompanion('${species}')">
+        <div class="picker-svg">${buildCharacter(species, 'idle', 70)}</div>
+        <div class="picker-name">${c.defaultName}</div>
+        <div class="picker-sound">"${c.sound}"</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('picker-grid').innerHTML = html;
+}
+
+function playSequence() {
+  const seq = ['idle', 'thinking', 'sleepy', 'waiting', 'done', 'idle'];
+  seq.forEach((s, i) => setTimeout(() => setState(s), i * 2200));
+}
+
+function playSound() {
+  const char = characters[currentCompanion];
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    
+    if (char.sound === 'coo') {
+      playTone(ctx, now, 380, 0.5, 'sine', 0.18, [[0.08, 0.85], [0.2, 0.95], [0.35, 0.7]]);
+      playTone(ctx, now + 0.5, 360, 0.5, 'sine', 0.18, [[0.08, 0.85], [0.2, 0.95], [0.35, 0.7]]);
+    } else if (char.sound === 'bark') {
+      playTone(ctx, now, 250, 0.15, 'square', 0.12, [[0.05, 0.8]]);
+      playTone(ctx, now + 0.2, 280, 0.15, 'square', 0.12, [[0.05, 0.8]]);
+      playTone(ctx, now + 0.4, 250, 0.15, 'square', 0.12, [[0.05, 0.8]]);
+    } else if (char.sound === 'meow') {
+      playTone(ctx, now, 600, 0.7, 'sawtooth', 0.1, [[0.2, 1.4], [0.6, 0.8]]);
+    } else if (char.sound === 'ribbit') {
+      playTone(ctx, now, 180, 0.2, 'square', 0.14, [[0.1, 1.3]]);
+      playTone(ctx, now + 0.25, 180, 0.2, 'square', 0.14, [[0.1, 1.3]]);
+    } else if (char.sound === 'chitter') {
+      for (let i = 0; i < 6; i++) {
+        playTone(ctx, now + i * 0.08, 800 + Math.random() * 200, 0.06, 'triangle', 0.08, []);
+      }
+    } else if (char.sound === 'quack') {
+      playTone(ctx, now, 320, 0.15, 'sawtooth', 0.15, [[0.05, 0.7]]);
+      playTone(ctx, now + 0.2, 320, 0.15, 'sawtooth', 0.15, [[0.05, 0.7]]);
+    }
+  } catch(e) {}
+}
+
+function playTone(ctx, start, basePitch, duration, type, peak, pitchBends) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(basePitch, start);
+  pitchBends.forEach(([t, mult]) => {
+    osc.frequency.linearRampToValueAtTime(basePitch * mult, start + t);
+  });
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(peak, start + 0.03);
+  gain.gain.linearRampToValueAtTime(peak * 0.7, start + duration * 0.6);
+  gain.gain.linearRampToValueAtTime(0, start + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration);
+}
+
+renderPicker();
+setState('idle');
+</script>
+</body>
+</html>
