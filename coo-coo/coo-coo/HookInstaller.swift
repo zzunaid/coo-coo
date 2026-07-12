@@ -166,13 +166,18 @@ def main():
 
     if state == "waiting":
         msg = ctx.get("message", "")
-        # Only fire "waiting" if the notification is genuinely blocking for user input.
-        # Generic filler messages and non-blocking notifications are suppressed.
-        stripped = msg.lower().strip().rstrip(".…")
-        generic = stripped in ("claude is waiting for your input", "claude is waiting", "")
-        if generic or (msg and not is_blocking_notification(msg)):
+        notification_type = ctx.get("notification_type", "")
+        # idle_prompt fires when Claude finishes a turn — not actionable for the user.
+        # permission_prompt fires when Claude needs the user to approve a tool call.
+        if notification_type == "idle_prompt":
             log(state, ctx, sent=False)
             return
+        if notification_type != "permission_prompt":
+            stripped = msg.lower().strip().rstrip(".…")
+            generic = stripped in ("claude is waiting for your input", "claude is waiting", "")
+            if generic or (msg and not is_blocking_notification(msg)):
+                log(state, ctx, sent=False)
+                return
         msg = msg if msg else ""
     elif state == "thinking":
         tool = ctx.get("tool_name", "")
