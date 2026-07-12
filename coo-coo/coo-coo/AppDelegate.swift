@@ -95,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(handleWidgetToggle(_:)), name: .coocooToggleWidget, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(refreshAllIcons), name: .coocooCharacterChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleWidgetResize), name: .coocooWidgetResized, object: nil)
-        let showWidget = UserDefaults.standard.object(forKey: "showFloatingWidget") as? Bool ?? false
+        let showWidget = UserDefaults.standard.object(forKey: "showFloatingWidget") as? Bool ?? true
         if showWidget { setupFloatingWidget() }
     }
 
@@ -103,6 +103,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard HookInstaller.currentStatus() != .installed else { return }
         DispatchQueue.global(qos: .utility).async {
             HookInstaller.install()
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Hooks installed!"
+                alert.informativeText = "Please restart Claude Code for CooCoo to start detecting its state."
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
         }
     }
 
