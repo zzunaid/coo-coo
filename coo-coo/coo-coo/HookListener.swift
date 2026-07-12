@@ -27,6 +27,10 @@ class HookListener {
             let msg = json["message"] as? String ?? ""
             let sessionId = json["session_id"] as? String ?? ""
             let cwd = json["cwd"] as? String ?? ""
+            // First hook event means Claude Code was restarted — clear the setup banner
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(false, forKey: "hooksJustInstalled")
+            }
             self.onEvent?(state, msg, sessionId, cwd)
         }
     }

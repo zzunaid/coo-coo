@@ -4,6 +4,7 @@ import AppKit
 struct PopoverView: View {
     @EnvironmentObject var store: CompanionStateStore
     @AppStorage("selectedCharacter") private var selectedCharacter = "pigeon"
+    @AppStorage("hooksJustInstalled") private var hooksJustInstalled = false
 
     private var character: CharacterID {
         CharacterID(rawValue: selectedCharacter) ?? .pigeon
@@ -11,6 +12,26 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+
+            // Restart banner — shown once after first-time hook install
+            if hooksJustInstalled {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.counterclockwise.circle.fill")
+                        .foregroundStyle(.orange)
+                    Text("Restart Claude Code to activate alerts")
+                        .font(.system(size: 11, weight: .medium))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .onTapGesture { hooksJustInstalled = false }
+                }
+                .padding(10)
+                .background(Color.orange.opacity(0.12))
+                .cornerRadius(8)
+                .padding(.bottom, 10)
+            }
 
             // Header
             HStack(spacing: 10) {
