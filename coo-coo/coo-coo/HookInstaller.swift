@@ -76,6 +76,11 @@ enum HookInstaller {
         do {
             try scriptData.write(to: scriptURL)
             try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+            // Files created by this process can inherit com.apple.quarantine if the
+            // app bundle was ever launched from a quarantined location. A quarantined
+            // script fails to execute non-interactively (no Finder dialog to approve
+            // it), so Claude Code's hook calls silently fail. Strip it unconditionally.
+            removexattr(scriptURL.path, "com.apple.quarantine", 0)
         } catch {
             return .error("Can't write script: \(error.localizedDescription)")
         }
@@ -88,6 +93,13 @@ enum HookInstaller {
         }
 
         return .installed
+    }
+
+    // Strips quarantine from an already-installed script. Safe to call anytime —
+    // no-ops if the script is missing or already clean.
+    static func repairQuarantine() {
+        guard FileManager.default.fileExists(atPath: scriptURL.path) else { return }
+        removexattr(scriptURL.path, "com.apple.quarantine", 0)
     }
 
     // MARK: - settings.json patch

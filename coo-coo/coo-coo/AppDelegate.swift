@@ -100,7 +100,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func installHooksIfNeeded() {
-        guard HookInstaller.currentStatus() != .installed else { return }
+        guard HookInstaller.currentStatus() != .installed else {
+            // Already installed, but a prior launch may have written the script
+            // while quarantined, silently breaking every hook call since. Repair
+            // it on every launch — cheap, and there's no way to detect the stuck
+            // state short of trying to run the script.
+            DispatchQueue.global(qos: .utility).async {
+                HookInstaller.repairQuarantine()
+            }
+            return
+        }
         DispatchQueue.global(qos: .utility).async {
             HookInstaller.install()
             DispatchQueue.main.async {
