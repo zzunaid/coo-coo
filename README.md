@@ -65,6 +65,10 @@ All communication is local — no internet required for the core alerting featur
 
 ---
 
+## Characters
+
+![CooCoo character picker](docs/previews/characters.png)
+
 ## Features
 
 - **6 characters** to choose from: Gerald (pigeon), Mr. Whiskers (cat), Quackers (duck), Kermit Jr (frog), Boo Boo (bear), Bandit (raccoon)
