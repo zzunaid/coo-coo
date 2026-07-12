@@ -22,16 +22,21 @@ enum HookInstaller {
 
     // MARK: - Paths
 
+    // In a sandboxed app, FileManager.homeDirectoryForCurrentUser returns the
+    // container path, not the real home. Claude Code reads from the real home,
+    // so we use getpwuid() to get the actual /Users/<name> path.
+    private static var realHomeURL: URL {
+        URL(fileURLWithPath: String(cString: getpwuid(getuid())!.pointee.pw_dir))
+    }
+
     private static var hookDir: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".coocoo/hooks")
+        realHomeURL.appendingPathComponent(".coocoo/hooks")
     }
     private static var scriptURL: URL {
         hookDir.appendingPathComponent("coocoo-notify.py")
     }
     private static var settingsURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".claude/settings.json")
+        realHomeURL.appendingPathComponent(".claude/settings.json")
     }
 
     // MARK: - Status check
