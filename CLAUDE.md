@@ -20,16 +20,17 @@ and optionally as a floating widget on screen.
 ## Status
 
 ### ✅ Done
-(nothing yet — this is a new project)
+- Phase 1: minimum viable pigeon — TCP listener, menu bar icon, popover, floating widget, hook installer
+- Phase 2: animated characters — all 6 SwiftUI character views, 12fps animated menu bar icon
+- Phase 3: floating overlay window — NSPanel widget with drag, minimize, position persistence
+- Phase 4: preferences window — character grid picker, state scrubber preview, sound/widget/login settings, hook installer UI
 
-### 🟡 In progress
-- Phase 1: minimum viable pigeon
+### 🟡 In progress / known issues
+- Notification hook fires for general Claude Code notifications (not just user-input-required), causing occasional false "needs you" state — plan to filter by payload content
+- Phase 5: multi-character system — characters exist and are selectable, per-character sounds not fully verified
 
 ### ❌ Not started
-- Phase 2: animated SVG Gerald
-- Phase 3: floating overlay window
-- Phase 4: preferences window
-- Phase 5: multi-character system
+- APNs iPhone push — requires companion iOS app, Bonjour pairing, JWT-signed APNs
 
 ## Spec docs
 - `docs/00-overview.md` — architecture, character system, state enum

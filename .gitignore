@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+*.DS_Store
+
+# Xcode user state
+*.xcuserstate
+xcuserdata/
+
+# Build products
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Firebase — contains API keys, never commit
+GoogleService-Info.plist
+
+# SPM cache
+.build/
+*.resolved
+
+# DMG artifacts
+*.dmg

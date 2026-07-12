@@ -1,17 +1,19 @@
-//
-//  coo_cooApp.swift
-//  coo-coo
-//
-//  Created by Zunaid on 18/05/26.
-//
-
 import SwiftUI
+import FirebaseCore
+import FirebaseAnalytics
 
 @main
 struct coo_cooApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    init() {
+        FirebaseApp.configure()
+        CooAnalytics.logAppLaunch()
+    }
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Settings {
+            EmptyView()
         }
     }
 }
