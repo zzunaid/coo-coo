@@ -104,12 +104,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .utility).async {
             HookInstaller.install()
             DispatchQueue.main.async {
-                let alert = NSAlert()
-                alert.messageText = "Hooks installed!"
-                alert.informativeText = "Please restart Claude Code for CooCoo to start detecting its state."
-                alert.alertStyle = .informational
-                alert.addButton(withTitle: "OK")
-                alert.runModal()
+                let content = UNMutableNotificationContent()
+                content.title = "CooCoo is ready!"
+                content.body = "Restart Claude Code once to activate alerts."
+                content.sound = .default
+                let request = UNNotificationRequest(
+                    identifier: "coocoo.hooks.installed",
+                    content: content,
+                    trigger: nil
+                )
+                UNUserNotificationCenter.current().add(request)
             }
         }
     }
