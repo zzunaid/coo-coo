@@ -45,6 +45,10 @@ The `Notification` hook fires for all Claude notifications, not just "needs inpu
 - `permission_prompt` → **fire alert** (Claude needs you to approve a tool call)
 - `idle_prompt` → **suppress** (Claude just finished a turn, not urgent)
 
+### Flow chart
+
+![CooCoo state detection flow](docs/coocoo-flow.svg)
+
 ### Architecture
 
 ```

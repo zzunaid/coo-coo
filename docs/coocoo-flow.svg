@@ -1,0 +1,133 @@
+<svg width="820" height="860" viewBox="0 0 820 860" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#27ae60" />
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="860" fill="#f5f5f7"/>
+
+  <!-- Title -->
+  <text x="410" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1d1f" font-family="-apple-system, sans-serif">CooCoo — State Detection Flow</text>
+
+  <!-- CLAUDE CODE SIDE -->
+  <rect x="30" y="60" width="340" height="740" rx="16" fill="#eaf0fb" stroke="#b0c4e8" stroke-width="1.5"/>
+  <text x="200" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#3a5aad" font-family="-apple-system, sans-serif">CLAUDE CODE</text>
+
+  <!-- User sends message -->
+  <rect x="70" y="108" width="260" height="48" rx="10" fill="#fff" stroke="#b0c4e8" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="200" y="128" text-anchor="middle" font-size="12" font-weight="600" fill="#1d1d1f" font-family="-apple-system, sans-serif">User sends message</text>
+  <text x="200" y="146" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">Claude Code receives input</text>
+
+  <!-- PreToolUse hook -->
+  <rect x="70" y="210" width="260" height="48" rx="10" fill="#fff8e1" stroke="#f39c12" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="200" y="230" text-anchor="middle" font-size="12" font-weight="600" fill="#e67e22" font-family="-apple-system, sans-serif">Hook: PreToolUse</text>
+  <text x="200" y="248" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">Claude about to run a tool</text>
+
+  <!-- Notification hook -->
+  <rect x="70" y="380" width="260" height="48" rx="10" fill="#fff8e1" stroke="#f39c12" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="200" y="400" text-anchor="middle" font-size="12" font-weight="600" fill="#e67e22" font-family="-apple-system, sans-serif">Hook: Notification</text>
+  <text x="200" y="418" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">Claude fires a notification</text>
+
+  <!-- notification_type diamond -->
+  <polygon points="200,490 290,535 200,580 110,535" fill="#fff" stroke="#b0c4e8" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="200" y="530" text-anchor="middle" font-size="11" font-weight="600" fill="#1d1d1f" font-family="-apple-system, sans-serif">notification_type?</text>
+  <text x="200" y="548" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, sans-serif">check payload field</text>
+
+  <!-- Stop hook -->
+  <rect x="70" y="680" width="260" height="48" rx="10" fill="#fff8e1" stroke="#f39c12" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="200" y="700" text-anchor="middle" font-size="12" font-weight="600" fill="#e67e22" font-family="-apple-system, sans-serif">Hook: Stop</text>
+  <text x="200" y="718" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">Claude finishes its turn</text>
+
+  <!-- Arrows within Claude Code -->
+  <line x1="200" y1="156" x2="200" y2="204" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="210" y="184" font-size="10" fill="#888" font-family="-apple-system, sans-serif">calls script</text>
+
+  <line x1="200" y1="258" x2="200" y2="374" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="210" y="320" font-size="10" fill="#888" font-family="-apple-system, sans-serif">tool runs…</text>
+
+  <line x1="200" y1="428" x2="200" y2="484" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <line x1="200" y1="580" x2="200" y2="674" stroke="#27ae60" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="206" y="632" font-size="10" fill="#27ae60" font-family="-apple-system, sans-serif">idle_prompt → suppress</text>
+
+  <line x1="200" y1="728" x2="200" y2="774" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- TCP arrow PreToolUse -->
+  <line x1="330" y1="234" x2="448" y2="234" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="5,3"/>
+  <text x="386" y="226" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, sans-serif">TCP :47291</text>
+
+  <!-- TCP arrow permission_prompt -->
+  <line x1="290" y1="535" x2="448" y2="400" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="375" y="445" text-anchor="middle" font-size="10" fill="#e74c3c" font-family="-apple-system, sans-serif">permission_prompt</text>
+  <text x="375" y="458" text-anchor="middle" font-size="10" fill="#e74c3c" font-family="-apple-system, sans-serif">→ FIRE alert</text>
+
+  <!-- TCP arrow Stop -->
+  <line x1="330" y1="704" x2="448" y2="600" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="5,3"/>
+  <text x="400" y="670" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, sans-serif">TCP :47291</text>
+
+  <!-- COOCOO APP SIDE -->
+  <rect x="450" y="60" width="340" height="740" rx="16" fill="#eafaf1" stroke="#a9dfbf" stroke-width="1.5"/>
+  <text x="620" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#1e8449" font-family="-apple-system, sans-serif">COOCOO APP (macOS)</text>
+
+  <!-- HookListener -->
+  <rect x="490" y="108" width="260" height="48" rx="10" fill="#fff" stroke="#a9dfbf" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="620" y="128" text-anchor="middle" font-size="12" font-weight="600" fill="#1d1d1f" font-family="-apple-system, sans-serif">HookListener</text>
+  <text x="620" y="146" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">TCP server on 127.0.0.1:47291</text>
+
+  <!-- CompanionStateStore -->
+  <rect x="490" y="210" width="260" height="48" rx="10" fill="#fff" stroke="#a9dfbf" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="620" y="230" text-anchor="middle" font-size="12" font-weight="600" fill="#1d1d1f" font-family="-apple-system, sans-serif">CompanionStateStore</text>
+  <text x="620" y="248" text-anchor="middle" font-size="11" fill="#666" font-family="-apple-system, sans-serif">transition(to: state)</text>
+
+  <!-- thinking -->
+  <rect x="490" y="320" width="112" height="44" rx="8" fill="#fff8e1" stroke="#f39c12" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="546" y="338" text-anchor="middle" font-size="11" font-weight="600" fill="#e67e22" font-family="-apple-system, sans-serif">thinking</text>
+  <text x="546" y="354" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, sans-serif">menu bar spins</text>
+
+  <!-- waiting -->
+  <rect x="618" y="320" width="112" height="44" rx="8" fill="#fdecea" stroke="#e74c3c" stroke-width="2" filter="url(#shadow)"/>
+  <text x="674" y="338" text-anchor="middle" font-size="11" font-weight="600" fill="#c0392b" font-family="-apple-system, sans-serif">waiting 🚨</text>
+  <text x="674" y="354" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, sans-serif">ALERT fires</text>
+
+  <!-- done -->
+  <rect x="554" y="430" width="112" height="44" rx="8" fill="#eafaf1" stroke="#27ae60" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="610" y="448" text-anchor="middle" font-size="11" font-weight="600" fill="#1e8449" font-family="-apple-system, sans-serif">done ✓</text>
+  <text x="610" y="464" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, sans-serif">icon settles</text>
+
+  <!-- Alert effects -->
+  <rect x="490" y="550" width="260" height="120" rx="10" fill="#fff" stroke="#e74c3c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="620" y="574" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b" font-family="-apple-system, sans-serif">Alert Side Effects</text>
+  <text x="510" y="598" font-size="11" fill="#1d1d1f" font-family="-apple-system, sans-serif">🔊  Coo sound (AVAudioEngine)</text>
+  <text x="510" y="618" font-size="11" fill="#1d1d1f" font-family="-apple-system, sans-serif">🔔  macOS Notification</text>
+  <text x="510" y="638" font-size="11" fill="#1d1d1f" font-family="-apple-system, sans-serif">📊  Firebase Analytics event</text>
+  <text x="510" y="658" font-size="11" fill="#1d1d1f" font-family="-apple-system, sans-serif">🐦  Animated menu bar icon</text>
+
+  <!-- Arrows within CooCoo -->
+  <line x1="620" y1="156" x2="620" y2="204" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="580" y1="258" x2="546" y2="314" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="660" y1="258" x2="674" y2="314" stroke="#e74c3c" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <line x1="620" y1="258" x2="610" y2="424" stroke="#27ae60" stroke-width="1.5" marker-end="url(#arrow-green)" stroke-dasharray="4,3"/>
+  <line x1="674" y1="364" x2="674" y2="490" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="674" y1="490" x2="750" y2="490" stroke="#e74c3c" stroke-width="1.5"/>
+  <line x1="750" y1="490" x2="750" y2="544" stroke="#e74c3c" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- Legend -->
+  <rect x="30" y="815" width="760" height="38" rx="8" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <line x1="55" y1="834" x2="90" y2="834" stroke="#f39c12" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="96" y="838" font-size="11" fill="#555" font-family="-apple-system, sans-serif">Hook fires → TCP packet sent</text>
+  <line x1="280" y1="834" x2="315" y2="834" stroke="#e74c3c" stroke-width="2"/>
+  <text x="321" y="838" font-size="11" fill="#555" font-family="-apple-system, sans-serif">permission_prompt path (fires alert)</text>
+  <line x1="530" y1="834" x2="565" y2="834" stroke="#27ae60" stroke-width="2" stroke-dasharray="4,3"/>
+  <text x="571" y="838" font-size="11" fill="#555" font-family="-apple-system, sans-serif">idle_prompt suppressed</text>
+</svg>
