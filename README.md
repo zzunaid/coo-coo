@@ -8,9 +8,11 @@ CooCoo sits in your macOS menu bar and alerts you — with a coo sound and notif
 
 ## Download
 
-**[⬇️ Download CooCoo v1.0.0](https://github.com/zzunaid/coo-coo/releases/tag/v1.0.0)**
+**[⬇️ Get CooCoo](https://zzunaid.github.io/coo-coo/)**
 
 Requires macOS 14 Sonoma or later + Claude Code installed.
+
+Prefer to skip straight to the file, or build it yourself? [Grab the DMG directly](https://github.com/zzunaid/coo-coo/releases/tag/v1.0.0) from Releases, or see [Building from source](#building-from-source) below.
 
 ---
 
@@ -71,7 +73,7 @@ All communication is local — no internet required for the core alerting featur
 
 ## Features
 
-- **6 characters** to choose from: Gerald (pigeon), Mr. Whiskers (cat), Quackers (duck), Kermit Jr (frog), Boo Boo (bear), Bandit (raccoon)
+- **6 characters** to choose from: Gerald (pigeon), Mr. Whiskers (cat), Quackers (duck), Kermit Jr (frog), BooBoo (dog), Bandit (raccoon)
 - **Animated menu bar icon** — changes appearance based on Claude's state
 - **Sound alert + macOS notification** when Claude needs you
 - **Floating widget** — drag anywhere on screen, persists position
