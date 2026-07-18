@@ -371,6 +371,7 @@
     <form class="cta-form" id="cta-form">
       <label for="cta-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Email address</label>
       <input type="email" id="cta-email" name="email" placeholder="you@yourmac.dev" required />
+      <input type="hidden" name="source" value="hero" />
       <button type="submit" class="btn-primary">Get CooCoo — free</button>
     </form>
     <p class="cta-note">macOS 14+ · or skip the email and <a href="https://github.com/zzunaid/coo-coo" target="_blank" rel="noopener">build it from source →</a></p>
@@ -452,6 +453,7 @@
     <form class="cta-form" id="cta-form-2" style="margin: 0 auto;">
       <label for="cta-email-2" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Email address</label>
       <input type="email" id="cta-email-2" name="email" placeholder="you@yourmac.dev" required />
+      <input type="hidden" name="source" value="footer" />
       <button type="submit" class="btn-primary">Get CooCoo — free</button>
     </form>
   </section>
@@ -695,6 +697,8 @@
   });
 
   /* ---------- CTA forms ---------- */
+  var FORMSPREE_URL = "https://formspree.io/f/xrenqkzd";
+
   function track(name, params) {
     if (typeof gtag === 'function') gtag('event', name, params || {});
   }
@@ -704,19 +708,29 @@
     var success = document.getElementById(successId);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      // NOTE for integration: this is where a real mailing-list call goes
-      // (Gumroad / Lemon Squeezy / ConvertKit form action or API call).
-      // Wired here to just start the actual release download so the page
-      // works end-to-end today.
-      // Analytics events below are anonymous by design — never pass the
-      // email address itself as an event parameter, only where the click
-      // happened. The real address only ever lives in the mailing-list
-      // tool once that's wired up, never in GA/Firebase.
+      // Analytics events are anonymous by design — never pass the email
+      // address itself as an event parameter, only where the click
+      // happened. The real address lives only in Formspree, never in
+      // GA/Firebase.
       track('email_submitted', { form_location: location });
       track('download_click', { form_location: location });
-      form.style.display = 'none';
-      success.style.display = 'block';
-      window.location.href = DOWNLOAD_URL;
+
+      // Submit to Formspree, then proceed to the download regardless of
+      // whether that request succeeds — a flaky network call to a third
+      // party shouldn't block someone from getting the app. .finally()
+      // ensures the request has actually completed before navigating away,
+      // since an immediate redirect can abort an in-flight fetch.
+      fetch(FORMSPREE_URL, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form)
+      }).catch(function () {
+        /* non-blocking */
+      }).finally(function () {
+        form.style.display = 'none';
+        success.style.display = 'block';
+        window.location.href = DOWNLOAD_URL;
+      });
     });
   }
   wireForm('cta-form', 'cta-success', 'hero');
