@@ -1,4 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="CooCoo lives in your macOS menu bar and alerts you the moment Claude Code needs your input — six animated characters, local-only hooks, free and open source.">
 <title>CooCoo — Gerald watches Claude Code so you don't have to</title>
+
+<!-- Google Analytics (GA4) — reuses the same Firebase project as the macOS app (coo-coo-a54d6). -->
+<!-- TODO: replace G-XXXXXXXXXX with the real Measurement ID once a Web data stream is added to that project. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+
 <style>
   @font-face {
     font-family: 'Bricolage';
@@ -320,6 +337,8 @@
     .cast-grid { grid-template-columns: 1fr; }
   }
 </style>
+</head>
+<body>
 
 <nav>
   <div class="wrap nav-row">
@@ -677,7 +696,11 @@
   });
 
   /* ---------- CTA forms ---------- */
-  function wireForm(formId, successId) {
+  function track(name, params) {
+    if (typeof gtag === 'function') gtag('event', name, params || {});
+  }
+
+  function wireForm(formId, successId, location) {
     var form = document.getElementById(formId);
     var success = document.getElementById(successId);
     form.addEventListener('submit', function (e) {
@@ -686,12 +709,26 @@
       // (Gumroad / Lemon Squeezy / ConvertKit form action or API call).
       // Wired here to just start the actual release download so the page
       // works end-to-end today.
+      // Analytics events below are anonymous by design — never pass the
+      // email address itself as an event parameter, only where the click
+      // happened. The real address only ever lives in the mailing-list
+      // tool once that's wired up, never in GA/Firebase.
+      track('email_submitted', { form_location: location });
+      track('download_click', { form_location: location });
       form.style.display = 'none';
       success.style.display = 'block';
       window.location.href = DOWNLOAD_URL;
     });
   }
-  wireForm('cta-form', 'cta-success');
-  wireForm('cta-form-2', 'cta-success-2');
+  wireForm('cta-form', 'cta-success', 'hero');
+  wireForm('cta-form-2', 'cta-success-2', 'footer');
+
+  document.querySelectorAll('a[href*="github.com"]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      track('github_link_click', { href: a.href });
+    });
+  });
 })();
 </script>
+</body>
+</html>
