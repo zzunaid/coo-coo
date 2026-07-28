@@ -7,6 +7,7 @@ struct PreferencesView: View {
     @AppStorage("doneTimeout") private var doneTimeout = 30.0
     @AppStorage("showFloatingWidget") private var showFloatingWidget = false
     @AppStorage("selectedCharacter") private var selectedCharacter = "pigeon"
+    @AppStorage("alertStyle") private var alertStyle = "shake"
     @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
     @State private var previewState: CompanionState = .idle
 
@@ -88,6 +89,12 @@ struct PreferencesView: View {
                     Text("30 s").tag(30.0)
                     Text("1 min").tag(60.0)
                     Text("Never").tag(0.0)
+                }
+                .pickerStyle(.segmented)
+
+                Picker("Alert style", selection: $alertStyle) {
+                    Text("Shake").tag("shake")
+                    Text("Walk").tag("walk")
                 }
                 .pickerStyle(.segmented)
             }

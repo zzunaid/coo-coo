@@ -95,12 +95,24 @@ struct MrWhiskersView: View {
         hfc(el(100, 64, 28, 18), "525252")
         hfc(el(100, 88, 5, 4), "ff9bb3") // nose
 
-        // Whiskers (3 per side)
+        // Hissing open mouth — waiting only. Aloof gives way to startled.
+        if state == .waiting {
+            let hiss = CGFloat(pulse(t, 0.3, 7))
+            hfc(el(100, 97, 6, 3 + hiss), "2a1a1a")
+            hfc(el(100, 99, 2.5, 1 + hiss * 0.4), "ff6b9b")
+            var fangL = Path(); fangL.move(to: pt(96, 96)); fangL.addLine(to: pt(95, 100)); fangL.addLine(to: pt(98, 97)); fangL.closeSubpath()
+            hfc(fangL, "ffffff")
+            var fangR = Path(); fangR.move(to: pt(104, 96)); fangR.addLine(to: pt(105, 100)); fangR.addLine(to: pt(102, 97)); fangR.closeSubpath()
+            hfc(fangR, "ffffff")
+        }
+
+        // Whiskers (3 per side) — twitch during waiting instead of sitting still
+        let whiskerTwitch: CGFloat = state == .waiting ? CGFloat(osc(t, 0.18, 4)) : 0
         for (ox, oy, tx, ty): (CGFloat, CGFloat, CGFloat, CGFloat) in [
             (93,84,60,82),(93,89,58,89),(93,94,60,96),
             (107,84,140,82),(107,89,142,89),(107,94,140,96)
         ] {
-            var w = Path(); w.move(to: pt(ox,oy)); w.addLine(to: pt(tx,ty))
+            var w = Path(); w.move(to: pt(ox,oy)); w.addLine(to: pt(tx, ty + whiskerTwitch))
             hsc(w, "777777", 0.9, .round)
         }
 

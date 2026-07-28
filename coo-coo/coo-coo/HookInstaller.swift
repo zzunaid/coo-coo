@@ -55,7 +55,7 @@ enum HookInstaller {
               let hooks = json["hooks"] as? [String: Any] else {
             return .notInstalled
         }
-        let needed = ["Notification", "Stop", "PreToolUse"]
+        let needed = ["Notification", "Stop", "PreToolUse", "UserPromptSubmit"]
         let allPresent = needed.allSatisfy { name in
             hookCommand(in: hooks, for: name)?.contains(scriptPath) == true
         }
@@ -106,10 +106,15 @@ enum HookInstaller {
         }
 
         // Merge hooks — preserve any existing non-CooCoo hooks
+        // UserPromptSubmit fires the instant the user submits their reply — before
+        // Claude has generated anything. Without it, the icon stays stuck on
+        // "waiting" until Claude's first tool call (PreToolUse) or the turn ends
+        // (Stop), which can lag several seconds behind the user's own action.
         var hooks = root["hooks"] as? [String: Any] ?? [:]
-        hooks["Notification"] = hookEntry("waiting", scriptPath: scriptPath)
-        hooks["Stop"]         = hookEntry("done", scriptPath: scriptPath)
-        hooks["PreToolUse"]   = hookEntry("thinking", scriptPath: scriptPath)
+        hooks["Notification"]     = hookEntry("waiting", scriptPath: scriptPath)
+        hooks["Stop"]             = hookEntry("done", scriptPath: scriptPath)
+        hooks["PreToolUse"]       = hookEntry("thinking", scriptPath: scriptPath)
+        hooks["UserPromptSubmit"] = hookEntry("thinking", scriptPath: scriptPath)
         root["hooks"] = hooks
 
         let data = try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys])

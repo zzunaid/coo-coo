@@ -35,6 +35,7 @@ CooCoo uses **Claude Code's built-in hook system** — not PTY parsing or proces
 | Hook | When it fires | CooCoo state |
 |------|--------------|-------------|
 | `PreToolUse` | Claude is about to run a tool | `thinking` — menu bar icon animates |
+| `UserPromptSubmit` | You submit a reply | `thinking` — clears the alert instantly, without waiting on Claude's first move |
 | `Notification` | Claude fires a notification | `waiting` — alert fires (filtered, see below) |
 | `Stop` | Claude finishes its turn | `done` — icon settles |
 

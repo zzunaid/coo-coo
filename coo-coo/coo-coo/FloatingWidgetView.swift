@@ -8,6 +8,7 @@ class FloatingStore: ObservableObject {
 
 extension Notification.Name {
     static let coocooWidgetResized = Notification.Name("coocoo.widgetResized")
+    static let coocooOpenTerminal = Notification.Name("coocoo.openTerminal")
 }
 
 struct FloatingWidgetView: View {
@@ -47,8 +48,8 @@ struct FloatingWidgetView: View {
                 .clipShape(Circle())
                 .shadow(
                     color: store.state == .waiting
-                        ? .red.opacity(0.3 + 0.4 * pulse) : .black.opacity(0.2),
-                    radius: store.state == .waiting ? 8 + 10 * pulse : 6,
+                        ? .orange.opacity(0.2 + 0.2 * pulse) : .black.opacity(0.2),
+                    radius: store.state == .waiting ? 6 + 5 * pulse : 6,
                     y: 3
                 )
         }
@@ -80,29 +81,35 @@ struct FloatingWidgetView: View {
                     .onTapGesture { isMinimized = true }
             }
 
-            // Character
-            CharacterView(character: character, state: store.state)
-                .frame(width: 80, height: 80)
+            // Character — tap to jump to this session's terminal
+            VStack(spacing: 0) {
+                CharacterView(character: character, state: store.state)
+                    .frame(width: 80, height: 80)
 
-            Spacer().frame(height: 6)
+                Spacer().frame(height: 6)
 
-            // Labels
-            Text(character.defaultName)
-                .font(.system(size: 10, weight: .semibold))
+                // Labels
+                Text(character.defaultName)
+                    .font(.system(size: 10, weight: .semibold))
 
-            Text(store.state.label)
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
-                .padding(.top, 2)
-
-            if !store.message.isEmpty {
-                Text(store.message)
+                Text(store.state.label)
                     .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .padding(.horizontal, 6)
-                    .padding(.top, 4)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+
+                if !store.message.isEmpty {
+                    Text(store.message)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 6)
+                        .padding(.top, 4)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                NotificationCenter.default.post(name: .coocooOpenTerminal, object: nil)
             }
 
             Spacer().frame(height: 14)
@@ -115,8 +122,8 @@ struct FloatingWidgetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(
             color: store.state == .waiting
-                ? .red.opacity(0.25 + 0.45 * pulse) : .black.opacity(0.18),
-            radius: store.state == .waiting ? 10 + 14 * pulse : 10,
+                ? .orange.opacity(0.18 + 0.22 * pulse) : .black.opacity(0.18),
+            radius: store.state == .waiting ? 10 + 6 * pulse : 10,
             y: 4
         )
         .padding(22)

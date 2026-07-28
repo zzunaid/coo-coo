@@ -15,6 +15,10 @@ enum CharacterMenuBarRenderer {
 
         let colors = character.menuBarColors
 
+        // Untransformed copy, used at the end for a fixed-position state accent
+        // dot that shouldn't inherit the whole-body wobble below.
+        let baseCtx = ctx
+
         // Whole-body transform
         var ctx = ctx
         switch state {
@@ -129,6 +133,17 @@ enum CharacterMenuBarRenderer {
                 .foregroundStyle(Color(hex: "7F77DD")))
             zc.draw(zt, at: CGPoint(x: 18 * s, y: (6 - yOff / s) * s), anchor: .center)
         }
+
+        // State accent dot — fixed bottom-LEFT corner, consistent across all 5
+        // states (unlike the waiting "!" / sleepy "z" extras above, which only
+        // exist for two of them). A quick glance at color alone should tell you
+        // the state regardless of which character is shown. Bottom-right is
+        // reserved for the per-session identity dot AppDelegate draws as a
+        // post-process overlay (renderIconImage) when multiple sessions are
+        // active — these two must not collide.
+        var dotCtx = baseCtx
+        dotCtx.fill(el(2.7, 18.6, 1.8, 1.8), with: .color(state.accentColor))
+        dotCtx.stroke(el(2.7, 18.6, 1.8, 1.8), with: .color(.black.opacity(0.18)), lineWidth: 0.6 * s)
     }
 }
 

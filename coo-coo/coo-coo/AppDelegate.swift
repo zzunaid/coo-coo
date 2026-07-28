@@ -8,6 +8,19 @@ extension Notification.Name {
     static let coocooToggleWidget = Notification.Name("coocoo.toggleWidget")
 }
 
+// Keeps a panel frame fully within the visibleFrame of whichever screen it's on
+// (falls back to the main screen if the origin isn't within any screen's bounds,
+// e.g. after an external monitor is disconnected). Used for the floating widget's
+// resize, restore, and drag paths so it can never end up off-screen.
+fileprivate func clampToScreen(_ frame: NSRect) -> NSRect {
+    let screen = NSScreen.screens.first(where: { $0.frame.contains(frame.origin) }) ?? NSScreen.main
+    guard let visible = screen?.visibleFrame else { return frame }
+    var f = frame
+    f.origin.x = min(max(f.origin.x, visible.minX), max(visible.minX, visible.maxX - f.width))
+    f.origin.y = min(max(f.origin.y, visible.minY), max(visible.minY, visible.maxY - f.height))
+    return f
+}
+
 // NSHostingView subclass for the floating widget.
 // • acceptsFirstMouse — clicks reach SwiftUI without the app needing to be frontmost.
 // • mouseDragged      — moves the panel at AppKit level for smooth, zero-lag dragging.
@@ -25,13 +38,18 @@ private class ClickableHostingView<Content: View>: NSHostingView<Content> {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let startOrigin = dragStartWindowOrigin,
+        guard let window,
+              let startOrigin = dragStartWindowOrigin,
               let startMouse  = dragStartMouseLocation else { return }
         let cur = NSEvent.mouseLocation
-        window?.setFrameOrigin(NSPoint(
-            x: startOrigin.x + (cur.x - startMouse.x),
-            y: startOrigin.y + (cur.y - startMouse.y)
-        ))
+        let proposed = NSRect(
+            origin: NSPoint(
+                x: startOrigin.x + (cur.x - startMouse.x),
+                y: startOrigin.y + (cur.y - startMouse.y)
+            ),
+            size: window.frame.size
+        )
+        window.setFrameOrigin(clampToScreen(proposed).origin)
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -82,6 +100,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Floating overlay widget.
     private let floatingStore = FloatingStore()
     private var floatingPanel: NSPanel?
+    private let alertPerformance = AlertPerformanceController()
     private static let widgetExpandedSize = NSSize(width: 164, height: 300)
     private static let widgetMiniSize = NSSize(width: 72, height: 72)
 
@@ -95,6 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(handleWidgetToggle(_:)), name: .coocooToggleWidget, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(refreshAllIcons), name: .coocooCharacterChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleWidgetResize), name: .coocooWidgetResized, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleOpenTerminal(_:)), name: .coocooOpenTerminal, object: nil)
         let showWidget = UserDefaults.standard.object(forKey: "showFloatingWidget") as? Bool ?? true
         if showWidget { setupFloatingWidget() }
     }
@@ -414,7 +434,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let saved = UserDefaults.standard.dictionary(forKey: "floatingWidgetOrigin"),
            let x = saved["x"] as? Double,
            let y = saved["y"] as? Double {
-            panel.setFrameOrigin(NSPoint(x: x, y: y))
+            let saved = NSRect(origin: NSPoint(x: x, y: y), size: panel.frame.size)
+            panel.setFrameOrigin(clampToScreen(saved).origin)
         } else {
             if let screen = NSScreen.main {
                 let margin: CGFloat = 24
@@ -439,9 +460,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let newSize = isMinimized ? Self.widgetMiniSize : Self.widgetExpandedSize
         let oldFrame = panel.frame
         panel.setContentSize(newSize)
-        // Keep the top-left corner of the panel fixed so the widget doesn't jump around
+        // Keep the top-left corner of the panel fixed so the widget doesn't jump around,
+        // then clamp — growing from a corner position can otherwise push the new,
+        // larger frame past the screen's edge.
         let newOriginY = oldFrame.maxY - newSize.height
-        panel.setFrameOrigin(NSPoint(x: oldFrame.minX, y: newOriginY))
+        let proposed = NSRect(origin: NSPoint(x: oldFrame.minX, y: newOriginY), size: newSize)
+        panel.setFrameOrigin(clampToScreen(proposed).origin)
     }
 
     @objc private func handleWidgetToggle(_ notification: Notification) {
@@ -453,11 +477,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // Tapping the expanded widget's character jumps back to the terminal the
+    // user was already running Claude Code in, rather than opening a new,
+    // unrelated window — TerminalInjector already knows how to find and
+    // activate whichever supported terminal app (iTerm2/Terminal/Warp/Ghostty)
+    // is running.
+    @objc private func handleOpenTerminal(_ notification: Notification) {
+        TerminalInjector.activate()
+    }
+
     private func updateFloatingState() {
         let all = sessions.values
         guard !all.isEmpty else {
             floatingStore.state = .idle
             floatingStore.message = ""
+            updateAlertPerformance(isWaiting: false)
             return
         }
         let priority: [CompanionState] = [.waiting, .thinking, .done, .sleepy, .idle]
@@ -465,6 +499,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let topSession = all.first { $0.store.state == topState }
         floatingStore.state = topState
         floatingStore.message = topSession?.store.message ?? ""
+        updateAlertPerformance(isWaiting: topState == .waiting)
+    }
+
+    // MARK: - Alert Style (Walk / Hang)
+    //
+    // A separate, card-less character panel (not the pinned widget) performs a
+    // short, finite burst of motion — a few walk-hops or hang-drops — then
+    // fades out on its own. It's edge-triggered off entering .waiting (not
+    // re-fired on every subsequent event while still waiting), so it doesn't
+    // loop or linger and compete with the pinned widget for attention.
+
+    private var alertPerformedForCurrentWait = false
+
+    private func updateAlertPerformance(isWaiting: Bool) {
+        if isWaiting {
+            guard !alertPerformedForCurrentWait else { return }
+            alertPerformedForCurrentWait = true
+            let charId = UserDefaults.standard.string(forKey: "selectedCharacter") ?? "pigeon"
+            let character = CharacterID(rawValue: charId) ?? .pigeon
+            let style = UserDefaults.standard.string(forKey: "alertStyle") ?? "shake"
+            alertPerformance.perform(style: style, character: character)
+        } else if alertPerformedForCurrentWait {
+            alertPerformedForCurrentWait = false
+            alertPerformance.cancel()
+        }
     }
 
     @objc private func refreshAllIcons() {

@@ -76,6 +76,17 @@ enum TerminalInjector {
         return false
     }
 
+    // Brings whichever supported terminal app is running to the front, without
+    // typing anything — used when the user just wants to jump back to the
+    // session they were already in, not send it a command.
+    @discardableResult
+    static func activate() -> Bool {
+        for name in ["iTerm2", "Terminal", "Warp", "Ghostty"] where isRunning(name) {
+            return appleScript("tell application \"\(name)\" to activate")
+        }
+        return false
+    }
+
     private static func isRunning(_ name: String) -> Bool {
         NSWorkspace.shared.runningApplications.contains { $0.localizedName == name }
     }

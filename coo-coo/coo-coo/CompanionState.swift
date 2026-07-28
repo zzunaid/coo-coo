@@ -44,6 +44,20 @@ enum CompanionState: String, Codable, CaseIterable {
         case .done:     return Color(red: 0.918, green: 0.953, blue: 0.867)
         }
     }
+
+    // Saturated accent, distinct from backgroundColor (which is a pastel tint meant
+    // for large fills). Used where a small, clearly-visible state indicator is
+    // needed, e.g. the menu bar icon's accent dot. Matches docs/characters.json's
+    // `states` palette so the web preview and the app agree on state color.
+    var accentColor: Color {
+        switch self {
+        case .idle:     return Color(nsColor: .tertiaryLabelColor)
+        case .thinking: return Color(hex: "f4a261")
+        case .waiting:  return Color(hex: "e24b4a")
+        case .sleepy:   return Color(hex: "7F77DD")
+        case .done:     return Color(hex: "97c459")
+        }
+    }
 }
 
 class CompanionStateStore: ObservableObject {

@@ -86,6 +86,16 @@ struct BanditView: View {
         hfc(el(100, 82, 9, 7), "1a1a1a")  // nose
         hfc(el(103, 79, 3, 2), "ffffff")   // nose shine
 
+        // Chattering mouth — waiting only, matches the fast "chitter" sound profile
+        if state == .waiting {
+            let chatter = CGFloat(pulse(t, 0.12, 5))
+            hfc(el(100, 96, 7, 2 + chatter), "2a1a0a")
+            var teeth = Path()
+            teeth.move(to: pt(95, 95)); teeth.addLine(to: pt(97, 98)); teeth.addLine(to: pt(100, 95))
+            teeth.addLine(to: pt(103, 98)); teeth.addLine(to: pt(105, 95))
+            hsc(teeth, "ffffff", 1.5, .round)
+        }
+
         // THE MASK (black bandit mask)
         hfc(el(80, 68, 22, 14), "1a1a1a")
         hfc(el(120, 68, 22, 14), "1a1a1a")

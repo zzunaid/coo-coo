@@ -13,18 +13,33 @@ final class SoundPlayer {
         engine.attach(node)
         let fmt = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
         engine.connect(node, to: engine.mainMixerNode, format: fmt)
-        // Engine must be started before the player node begins.
-        try? engine.start()
-        node.play()
+        startEngineAndNode()
+    }
+
+    // AVAudioPlayerNode.play() throws an uncaught NSException — crashing the
+    // whole app — if called while the engine isn't actually running. Engine
+    // start can genuinely fail (e.g. right after launch before Core Audio has
+    // finished warming up, or another app holds the output device), so
+    // node.play() must never run unless engine.isRunning is confirmed true.
+    private func startEngineAndNode() {
+        guard !engine.isRunning else {
+            if !node.isPlaying { node.play() }
+            return
+        }
+        do {
+            try engine.start()
+            node.play()
+        } catch {
+            // Leave engine/node stopped; play(for:) will retry on the next alert.
+        }
     }
 
     func play(for character: CharacterID) {
         guard UserDefaults.standard.object(forKey: "cooOnInput") as? Bool ?? true else { return }
         let volume = UserDefaults.standard.object(forKey: "soundVolume") as? Double ?? 0.8
         node.volume = Float(volume)
-        // Restart engine if it was interrupted (e.g. by another audio app).
-        if !engine.isRunning { try? engine.start() }
-        if !node.isPlaying { node.play() }
+        startEngineAndNode()
+        guard engine.isRunning else { return } // still not running — skip this alert's sound rather than crash
         guard let buffer = makeBuffer(for: character) else { return }
         node.scheduleBuffer(buffer, completionHandler: nil)
     }
