@@ -79,10 +79,19 @@ enum TerminalInjector {
     // Brings whichever supported terminal app is running to the front, without
     // typing anything — used when the user just wants to jump back to the
     // session they were already in, not send it a command.
+    //
+    // Uses NSRunningApplication.activate, not AppleScript "tell app to activate".
+    // Sending an Apple Event to another app requires the user to grant this
+    // app "Automation" access in System Settings first (a one-time TCC
+    // prompt); if that prompt is ever dismissed or denied, the script fails
+    // silently with no error — the tap just does nothing, forever, with no
+    // way to tell why. Activating a process directly is a plain window-server
+    // operation with no cross-app permission involved, so it can't fail that way.
     @discardableResult
     static func activate() -> Bool {
-        for name in ["iTerm2", "Terminal", "Warp", "Ghostty"] where isRunning(name) {
-            return appleScript("tell application \"\(name)\" to activate")
+        for id in ["com.googlecode.iterm2", "com.apple.Terminal", "dev.warp.Warp-Stable", "com.mitchellh.ghostty"] {
+            guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == id }) else { continue }
+            return app.activate(options: [])
         }
         return false
     }
