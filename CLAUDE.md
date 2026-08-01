@@ -40,8 +40,7 @@ and optionally as a floating widget on screen.
 - Notification filtering — only `permission_prompt` fires an alert; `idle_prompt` and generic "waiting for input" messages are suppressed (`coocoo-notify.py`)
 - Distribution — landing page (`docs/index.html`, GitHub Pages), email capture (Formspree), analytics (GA4/Firebase, reusing the app's Firebase project), MIT `LICENSE`
 
-### ❌ Not started
-- APNs iPhone push — requires companion iOS app, Bonjour pairing, JWT-signed APNs
+Nothing currently planned beyond the above — see below on the iOS companion.
 
 ## Spec docs
 - `docs/00-overview.md` — architecture, character system, state enum
@@ -49,6 +48,13 @@ and optionally as a floating widget on screen.
 - `docs/characters.json` — character data (we only need Gerald for 
   Phase 1, but the schema is here for later)
 - `docs/previews/*.html` — visual references
+
+**Note on scope**: these spec docs describe a larger cross-platform vision
+(companion iOS app, APNs push, Bonjour pairing, Dynamic Island/Live
+Activities) from before the project was deliberately scoped down to a
+standalone Mac app (see Key architectural decisions above). That iOS/APNs
+direction is dead, not just unstarted — don't treat it as a pending roadmap
+item.
 
 ## Conventions
 - Swift 5.9+, target macOS 14 Sonoma minimum
