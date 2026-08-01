@@ -12,7 +12,7 @@ CooCoo sits in your macOS menu bar and alerts you — with a coo sound and notif
 
 Requires macOS 14 Sonoma or later + Claude Code installed.
 
-Prefer to skip straight to the file, or build it yourself? [Grab the DMG directly](https://github.com/zzunaid/coo-coo/releases/tag/v1.1.0) from Releases, or see [Building from source](#building-from-source) below.
+Prefer to skip straight to the file, or build it yourself? [Grab the DMG directly](https://github.com/zzunaid/coo-coo/releases/tag/v1.2.0) from Releases, or see [Building from source](#building-from-source) below.
 
 ---
 
