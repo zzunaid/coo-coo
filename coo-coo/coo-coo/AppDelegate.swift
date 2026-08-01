@@ -68,6 +68,7 @@ private class SessionHandle {
     var cancellables = Set<AnyCancellable>()
     var removalTimer: Timer?
     var inactivityTimer: Timer?
+    var reapTimer: Timer?
 
     init(store: CompanionStateStore, statusItem: NSStatusItem, popover: NSPopover, accentColor: NSColor) {
         self.store = store
@@ -82,6 +83,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var sessionColorIndex = 0
     private var hookListener: HookListener!
     private var preferencesWindow: NSWindow?
+
+    // If a `claude` process is killed/crashes without ever firing the Stop
+    // hook (Ctrl-C hard-kill, terminal window closed, crash), its session
+    // would otherwise leak in the menu bar forever — resetInactivityTimer
+    // only demotes thinking/waiting to idle, it never removes anything.
+    // This is the actual reap: no hook event of any kind for this long means
+    // the session is almost certainly dead, not just a user thinking for a
+    // while. Long enough that a real coffee-break pause never gets caught by
+    // it — if the session is in fact still alive, the very next hook event
+    // just recreates its icon fresh, so a false reap is cheap and harmless.
+    private let sessionReapInterval: TimeInterval = 30 * 60
 
     private static let sessionColors: [NSColor] = [
         NSColor(red: 0.00, green: 0.74, blue: 0.83, alpha: 1), // teal
@@ -172,6 +184,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 handle.store.transition(to: state, message: message)
                 if state == .done {
                     handle.inactivityTimer?.invalidate()
+                    handle.reapTimer?.invalidate()
                     self.scheduleDoneRemoval(id: id, handle: handle)
                 } else {
                     self.resetInactivityTimer(id: id, handle: handle)
@@ -225,6 +238,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 handle.store.transition(to: .idle)
             }
         }
+        resetReapTimer(id: id, handle: handle)
+    }
+
+    private func resetReapTimer(id: String, handle: SessionHandle) {
+        handle.reapTimer?.invalidate()
+        handle.reapTimer = Timer.scheduledTimer(withTimeInterval: sessionReapInterval, repeats: false) { [weak self] _ in
+            self?.removeSession(id: id)
+        }
     }
 
     private func scheduleDoneRemoval(id: String, handle: SessionHandle) {
@@ -239,6 +260,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let handle = sessions[id] else { return }
         handle.removalTimer?.invalidate()
         handle.inactivityTimer?.invalidate()
+        handle.reapTimer?.invalidate()
         handle.cancellables.removeAll()
         if handle.popover.isShown { handle.popover.performClose(nil) }
         stopIconAnimation(for: handle.statusItem)
