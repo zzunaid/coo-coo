@@ -87,7 +87,29 @@ Applications. Don't assume lowercase — check both if unsure (`ls /Applications
 2. Tag `vX.Y.0` at that commit.
 3. Build the DMG, name it `CooCoo-vX.Y.0.dmg` (note: `v1.0.0`'s asset was
    just `CooCoo.dmg` — inconsistent, but every release since follows the
-   `CooCoo-vX.Y.0.dmg` pattern).
+   `CooCoo-vX.Y.0.dmg` pattern). Xcode's Organizer (Product → Archive →
+   Distribute App → Export Notarized App) only exports the notarized
+   `coo-coo.app` itself — it does **not** build a DMG. That's a separate
+   packaging step, done by hand from a Terminal:
+   ```
+   # stage: rename the exported app, add the Applications shortcut + volume icon
+   mkdir -p /tmp/dmg-stage
+   cp -R <path-to-exported>/coo-coo.app /tmp/dmg-stage/CooCoo.app   # capitalized
+   ln -s /Applications /tmp/dmg-stage/Applications
+   cp <old-release-dmg-mounted>/.VolumeIcon.icns /tmp/dmg-stage/    # reuse existing icon/layout
+
+   # build a writable image, set the custom volume icon flag, then compress
+   hdiutil create -volname CooCoo -srcfolder /tmp/dmg-stage -ov -format UDRW -size 100m /tmp/CooCoo-tmp.dmg
+   hdiutil attach /tmp/CooCoo-tmp.dmg -mountpoint /tmp/coocoo-mount -nobrowse -noautoopen
+   SetFile -a C /tmp/coocoo-mount        # marks the volume as having a custom icon
+   hdiutil detach /tmp/coocoo-mount -quiet
+   hdiutil convert /tmp/CooCoo-tmp.dmg -format UDZO -imagekey zlib-level=9 -o CooCoo-vX.Y.0.dmg
+   ```
+   The volume icon/`.DS_Store` can be lifted from mounting any previous
+   release's DMG — the layout (volume named `CooCoo`, containing `CooCoo.app`
+   + an `Applications` symlink) hasn't changed since `v1.0.0`. Verify with
+   `spctl -a -vvv -t install CooCoo-vX.Y.0.dmg` (or the mounted `.app` inside)
+   before shipping — should say `source=Notarized Developer ID`.
 4. `gh release create vX.Y.0 <dmg> --title "CooCoo vX.Y.0" --notes "..."`.
 5. **Update the download links** — this step has been missed before.
    Three places hardcode the release tag/filename and must all be bumped
