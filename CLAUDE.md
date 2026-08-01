@@ -55,3 +55,45 @@ and optionally as a floating widget on screen.
 - LSUIElement = YES in Info.plist (no dock icon)
 - Use new files over modifying existing ones when possible
 - Don't add dependencies without asking
+
+## Checking whether the running app is current
+The real, user-facing install is `/Applications/CooCoo.app` — not the Xcode
+DerivedData build, which is a separate debug artifact and often stale. Note
+the capitalization: the Xcode scheme/product is `coo-coo.app` (lowercase,
+matches the target name), but the release DMG's staged folder is named
+`CooCoo.app`, so that's the name Finder gives it when a user drags it to
+Applications. Don't assume lowercase — check both if unsure (`ls /Applications
+| grep -i coo-coo`). The bundle executable inside stays `coo-coo` either way.
+- Version/build: `defaults read /Applications/CooCoo.app/Contents/Info.plist
+  CFBundleShortVersionString` (and `CFBundleVersion`), compare against
+  `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` in
+  `coo-coo/coo-coo.xcodeproj/project.pbxproj` and against `git log -1`.
+- Running/healthy: `ps aux | grep coo-coo` and `lsof -i :47291 -sTCP:LISTEN`
+  (the hook TCP port).
+- Functional test: pipe a fake event through the real hook script, e.g.
+  `python3 hooks/coocoo-notify.py <<< '{"hook_event_name":"Notification","message":"Claude needs your permission to use Bash"}'`
+  — exit 0 means it reached the app over TCP.
+- Hook wiring: `~/.claude/settings.json` hook commands should point at
+  `/Applications/CooCoo.app/Contents/Resources/coocoo-notify.py` and every
+  command should end in `; exit 0` — CooCoo must never be able to block
+  Claude Code just because its own script is missing or erroring (see
+  `HookInstaller.swift`). If a terminal session shows a hook error pointing
+  somewhere stale (e.g. an old `~/Desktop/coo-coo.app` path), that session
+  just started before a path fix and needs a restart — it's not an app bug.
+
+## Release process
+1. Bump `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in
+   `coo-coo.xcodeproj/project.pbxproj`, commit.
+2. Tag `vX.Y.0` at that commit.
+3. Build the DMG, name it `CooCoo-vX.Y.0.dmg` (note: `v1.0.0`'s asset was
+   just `CooCoo.dmg` — inconsistent, but every release since follows the
+   `CooCoo-vX.Y.0.dmg` pattern).
+4. `gh release create vX.Y.0 <dmg> --title "CooCoo vX.Y.0" --notes "..."`.
+5. **Update the download links** — this step has been missed before.
+   Three places hardcode the release tag/filename and must all be bumped
+   together:
+   - `README.md` — "Grab the DMG directly" link
+   - `docs/index.html` — footer "Releases" link AND the `DOWNLOAD_URL` JS
+     variable (this one also embeds the asset filename, not just the tag)
+   - Push to `master` — GitHub Pages (`https://zzunaid.github.io/coo-coo/`)
+     rebuilds from `docs/index.html` automatically within a minute or two.
