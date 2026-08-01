@@ -48,6 +48,15 @@ enum HookInstaller {
 
     // MARK: - Status check
 
+    // Maps each hook event to the state argument patchSettings() installs it
+    // with — must stay in sync with the calls in patchSettings().
+    private static let neededStates: [(event: String, state: String)] = [
+        ("Notification", "waiting"),
+        ("Stop", "done"),
+        ("PreToolUse", "thinking"),
+        ("UserPromptSubmit", "thinking"),
+    ]
+
     static func currentStatus() -> Status {
         guard let scriptPath else { return .error("Bundled hook script missing") }
         guard let data = try? Data(contentsOf: settingsURL),
@@ -55,9 +64,13 @@ enum HookInstaller {
               let hooks = json["hooks"] as? [String: Any] else {
             return .notInstalled
         }
-        let needed = ["Notification", "Stop", "PreToolUse", "UserPromptSubmit"]
-        let allPresent = needed.allSatisfy { name in
-            hookCommand(in: hooks, for: name)?.contains(scriptPath) == true
+        // Compares the *exact* command string, not just whether it references
+        // the script path. An upgrade can change what the installed command
+        // looks like (e.g. adding the `; exit 0` safety net below) without
+        // moving the script — a path-only check would miss that and leave an
+        // existing install stuck on stale, less-safe command text forever.
+        let allPresent = neededStates.allSatisfy { event, state in
+            hookCommand(in: hooks, for: event) == expectedCommand(state: state, scriptPath: scriptPath)
         }
         return allPresent ? .installed : .notInstalled
     }
@@ -129,6 +142,10 @@ enum HookInstaller {
     // isn't healthy. CooCoo must never be able to block Claude Code.
     private static func hookEntry(_ state: String, scriptPath: String) -> [[String: Any]] {
         [["hooks": [["type": "command",
-                     "command": "/usr/bin/python3 \"\(scriptPath)\" \(state); exit 0"]]]]
+                     "command": expectedCommand(state: state, scriptPath: scriptPath)]]]]
+    }
+
+    private static func expectedCommand(state: String, scriptPath: String) -> String {
+        "/usr/bin/python3 \"\(scriptPath)\" \(state); exit 0"
     }
 }
