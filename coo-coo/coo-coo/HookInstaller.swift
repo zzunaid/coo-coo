@@ -121,8 +121,14 @@ enum HookInstaller {
         try data.write(to: settingsURL)
     }
 
+    // `; exit 0` is load-bearing: Claude Code treats a non-zero exit from a
+    // UserPromptSubmit/PreToolUse hook as "block this operation." If the
+    // bundled script is ever missing (mid-rebuild, moved app, bad install) or
+    // throws, python3 itself exits non-zero — which would otherwise stop the
+    // user from submitting prompts at all just because CooCoo, a notifier,
+    // isn't healthy. CooCoo must never be able to block Claude Code.
     private static func hookEntry(_ state: String, scriptPath: String) -> [[String: Any]] {
         [["hooks": [["type": "command",
-                     "command": "/usr/bin/python3 \"\(scriptPath)\" \(state)"]]]]
+                     "command": "/usr/bin/python3 \"\(scriptPath)\" \(state); exit 0"]]]]
     }
 }

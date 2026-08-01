@@ -1,15 +1,46 @@
 #!/usr/bin/env python3
 """
 CooCoo hook script — called by Claude Code hooks to notify the menu bar app.
-Usage: coocoo-notify.py <state>
+Usage: python3 coocoo-notify.py <state>
   state: idle | thinking | waiting | done
 Stdin: JSON context from Claude Code (tool name, message, etc.)
+
+Bundled inside CooCoo.app and invoked in place via `python3 <path>` — never
+copied out to a standalone file. A file written by the app itself at runtime
+inherits com.apple.quarantine from the app's sandboxed process (and this
+can't be stripped from within the sandbox, even via a subprocess — Apple's
+"responsible process" tracking taints children of a sandboxed parent too),
+which silently blocks it from ever running. A script that's just read as a
+data argument by the system's own /usr/bin/python3 was never independently
+quarantined, so this sidesteps the problem entirely instead of fighting it.
 """
 import json
+import os
 import socket
 import sys
 
+from datetime import datetime
+
 PORT = 47291
+
+LOG = os.path.expanduser("~/.coocoo/hook.log")
+
+# Keywords that indicate Claude is genuinely blocking for user input.
+BLOCKING_KEYWORDS = ("permission", "approve", "allow", "confirm", "y/n", "[y", "(y/", "proceed", "continue")
+
+
+def log(state, ctx, sent):
+    try:
+        os.makedirs(os.path.dirname(LOG), exist_ok=True)
+        with open(LOG, "a") as f:
+            f.write(f"{datetime.now().isoformat()} [{state}] sent={sent} payload={json.dumps(ctx)}\n")
+    except Exception:
+        pass
+
+
+def is_blocking_notification(msg: str) -> bool:
+    low = msg.lower()
+    return any(kw in low for kw in BLOCKING_KEYWORDS)
 
 
 def main():
@@ -51,8 +82,9 @@ def main():
             s.settimeout(0.5)
             s.connect(("127.0.0.1", PORT))
             s.sendall(payload)
+        log(state, ctx, sent=True)
     except Exception:
-        pass  # app not running — fail silently
+        log(state, ctx, sent=False)
 
 
 if __name__ == "__main__":
