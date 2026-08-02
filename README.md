@@ -4,6 +4,8 @@
 
 CooCoo sits in your macOS menu bar and alerts you — with a coo sound and notification — the moment Claude Code needs your input.
 
+![CooCoo alerting when Claude needs input](docs/demo.gif)
+
 ---
 
 ## Download
