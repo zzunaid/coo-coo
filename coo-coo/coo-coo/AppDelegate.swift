@@ -172,7 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Session management
 
-    private func handleEvent(state: CompanionState, message: String, sessionId: String, cwd: String) {
+    private func handleEvent(state: CompanionState, message: String, sessionId: String, cwd: String, detail: String = "") {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             let id = sessionId.isEmpty ? "default" : sessionId
@@ -181,7 +181,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 handle.removalTimer?.invalidate()
                 handle.removalTimer = nil
                 if !cwd.isEmpty { handle.store.cwd = cwd }
-                handle.store.transition(to: state, message: message)
+                handle.store.transition(to: state, message: message, detail: detail)
                 if state == .done {
                     handle.inactivityTimer?.invalidate()
                     handle.reapTimer?.invalidate()
@@ -216,7 +216,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 store.cwd = cwd
                 store.onDismiss = { [weak self] in self?.removeSession(id: id) }
                 self.sessions[id] = handle
-                store.transition(to: state, message: message)
+                store.transition(to: state, message: message, detail: detail)
                 Task { @MainActor in self.updateIcon(statusItem, state: state, accentColor: color) }
 
                 if state == .done {
@@ -518,6 +518,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             floatingStore.state = .idle
             floatingStore.message = ""
             floatingStore.otherCount = 0
+            floatingStore.projectName = ""
+            floatingStore.detail = ""
             updateAlertPerformance(isWaiting: false)
             return
         }
@@ -534,6 +536,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         floatingStore.state = topState
         floatingStore.message = topSession?.store.message ?? ""
         floatingStore.otherCount = max(0, sessions.count - 1)
+        // Populated unconditionally — FloatingWidgetView decides whether to
+        // show these based on the "Extended mode" preference, not this call site.
+        floatingStore.projectName = topSession?.store.displayCwd ?? ""
+        floatingStore.detail = topSession?.store.detail ?? ""
         updateAlertPerformance(isWaiting: topState == .waiting)
     }
 
@@ -605,8 +611,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startHookListener() {
         hookListener = HookListener()
-        hookListener.onEvent = { [weak self] state, message, sessionId, cwd in
-            self?.handleEvent(state: state, message: message, sessionId: sessionId, cwd: cwd)
+        hookListener.onEvent = { [weak self] state, message, sessionId, cwd, detail in
+            self?.handleEvent(state: state, message: message, sessionId: sessionId, cwd: cwd, detail: detail)
         }
         hookListener.start()
     }

@@ -5,9 +5,17 @@ struct PopoverView: View {
     @EnvironmentObject var store: CompanionStateStore
     @AppStorage("selectedCharacter") private var selectedCharacter = "pigeon"
     @AppStorage("hooksJustInstalled") private var hooksJustInstalled = false
+    @AppStorage("extendedMode") private var extendedMode = false
 
     private var character: CharacterID {
         CharacterID(rawValue: selectedCharacter) ?? .pigeon
+    }
+
+    // See FloatingWidgetView's displayMessage — same reasoning: extended
+    // mode prefers the specific command/file/snippet over the generic
+    // per-tool message when there's one available.
+    private var displayMessage: String {
+        extendedMode && !store.detail.isEmpty ? store.detail : store.message
     }
 
     var body: some View {
@@ -64,7 +72,7 @@ struct PopoverView: View {
             Divider()
 
             // Message
-            Text(store.message.isEmpty ? character.quote(for: store.state) : store.message)
+            Text(displayMessage.isEmpty ? character.quote(for: store.state) : displayMessage)
                 .font(.system(size: 11))
                 .italic()
                 .foregroundStyle(Color(hex: "444444"))

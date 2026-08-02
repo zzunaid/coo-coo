@@ -2,7 +2,7 @@ import Network
 import Foundation
 
 class HookListener {
-    var onEvent: ((CompanionState, String, String, String) -> Void)?
+    var onEvent: ((CompanionState, String, String, String, String) -> Void)?
     private var listener: NWListener?
 
     func start() {
@@ -27,11 +27,12 @@ class HookListener {
             let msg = json["message"] as? String ?? ""
             let sessionId = json["session_id"] as? String ?? ""
             let cwd = json["cwd"] as? String ?? ""
+            let detail = json["detail"] as? String ?? ""
             // First hook event means Claude Code was restarted — clear the setup banner
             DispatchQueue.main.async {
                 UserDefaults.standard.set(false, forKey: "hooksJustInstalled")
             }
-            self.onEvent?(state, msg, sessionId, cwd)
+            self.onEvent?(state, msg, sessionId, cwd, detail)
         }
     }
 }

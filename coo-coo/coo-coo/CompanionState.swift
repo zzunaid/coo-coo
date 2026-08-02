@@ -64,6 +64,12 @@ class CompanionStateStore: ObservableObject {
     @Published var state: CompanionState = .idle
     @Published var message: String = ""
     @Published var cwd: String = ""
+    // Richer per-state detail (the actual command/file for "thinking", a
+    // snippet of Claude's last message for "done") — only shown when the
+    // user has "Extended mode" enabled in Preferences. Always populated
+    // regardless of that setting; it's the views that decide whether to
+    // display it, not this store.
+    @Published var detail: String = ""
 
     // AppDelegate sets this to remove the session when user dismisses.
     var onDismiss: (() -> Void)?
@@ -81,15 +87,17 @@ class CompanionStateStore: ObservableObject {
         onDismiss?()
     }
 
-    func transition(to newState: CompanionState, message: String = "") {
+    func transition(to newState: CompanionState, message: String = "", detail: String = "") {
         let doSideEffects = newState == .waiting
         if Thread.isMainThread {
             self.state = newState
             self.message = message
+            self.detail = detail
         } else {
             DispatchQueue.main.async {
                 self.state = newState
                 self.message = message
+                self.detail = detail
             }
         }
         CooAnalytics.logStateChange(to: newState)

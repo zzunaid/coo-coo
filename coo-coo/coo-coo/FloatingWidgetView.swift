@@ -7,6 +7,10 @@ class FloatingStore: ObservableObject {
     // Sessions other than the one currently shown — the widget is a single
     // card and can only display one session at a time.
     @Published var otherCount: Int = 0
+    // Populated unconditionally by AppDelegate; only shown when the user
+    // has "Extended mode" on in Preferences (see FloatingWidgetView).
+    @Published var projectName: String = ""
+    @Published var detail: String = ""
 }
 
 extension Notification.Name {
@@ -18,9 +22,18 @@ struct FloatingWidgetView: View {
     @ObservedObject var store: FloatingStore
     @AppStorage("selectedCharacter") private var selectedCharacter = "pigeon"
     @AppStorage("widgetMinimized") private var isMinimized = false
+    @AppStorage("extendedMode") private var extendedMode = false
 
     private var character: CharacterID {
         CharacterID(rawValue: selectedCharacter) ?? .pigeon
+    }
+
+    // Extended mode prefers the richer per-state detail (actual command/file,
+    // or a snippet of Claude's last message) over the generic message when
+    // there's one to show — showing both would just repeat "Using Bash…"
+    // right above the command it ran.
+    private var displayMessage: String {
+        extendedMode && !store.detail.isEmpty ? store.detail : store.message
     }
 
     var body: some View {
@@ -117,17 +130,25 @@ struct FloatingWidgetView: View {
                 Text(character.defaultName)
                     .font(.system(size: 10, weight: .semibold))
 
+                if extendedMode && !store.projectName.isEmpty {
+                    Text(store.projectName)
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .padding(.horizontal, 6)
+                }
+
                 Text(store.state.label)
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
                     .padding(.top, 2)
 
-                if !store.message.isEmpty {
-                    Text(store.message)
+                if !displayMessage.isEmpty {
+                    Text(displayMessage)
                         .font(.system(size: 9))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
+                        .lineLimit(extendedMode ? 3 : 2)
                         .padding(.horizontal, 6)
                         .padding(.top, 4)
                 }

@@ -8,6 +8,7 @@ struct PreferencesView: View {
     @AppStorage("showFloatingWidget") private var showFloatingWidget = false
     @AppStorage("selectedCharacter") private var selectedCharacter = "pigeon"
     @AppStorage("alertStyle") private var alertStyle = "shake"
+    @AppStorage("extendedMode") private var extendedMode = false
     @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
     @State private var previewState: CompanionState = .idle
 
@@ -105,6 +106,10 @@ struct PreferencesView: View {
                     .onChange(of: showFloatingWidget) { _, show in
                         NotificationCenter.default.post(name: .coocooToggleWidget, object: show)
                     }
+                Toggle("Extended mode", isOn: $extendedMode)
+                Text("Shows the project name and more task detail (the actual command or file, a snippet of Claude's last message) in the widget and popover, instead of just a generic status.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

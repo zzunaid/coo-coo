@@ -43,6 +43,28 @@ def is_blocking_notification(msg: str) -> bool:
     return any(kw in low for kw in BLOCKING_KEYWORDS)
 
 
+# Richer detail for "extended mode" in the app — off by default there, so
+# this is always computed and sent regardless; the Swift side decides
+# whether to display it. Claude Code already hands us tool_input and
+# last_assistant_message in the hook context, just unused until now.
+def detail_for(state: str, ctx: dict) -> str:
+    if state == "thinking":
+        tool = ctx.get("tool_name", "")
+        tool_input = ctx.get("tool_input") or {}
+        if tool == "Bash":
+            return tool_input.get("command", "")
+        if tool in ("Edit", "Write", "NotebookEdit", "Read"):
+            path = tool_input.get("file_path", "")
+            return os.path.basename(path) if path else ""
+        if tool in ("Grep", "Glob"):
+            return tool_input.get("pattern", "")
+        return ""
+    if state == "done":
+        msg = ctx.get("last_assistant_message", "") or ""
+        return " ".join(msg.split())[:200]
+    return ""
+
+
 def main():
     state = sys.argv[1] if len(sys.argv) > 1 else "idle"
 
@@ -75,7 +97,10 @@ def main():
 
     session_id = ctx.get("session_id", "")
     cwd = ctx.get("cwd", "")
-    payload = json.dumps({"state": state, "message": msg, "session_id": session_id, "cwd": cwd}).encode()
+    detail = detail_for(state, ctx)
+    payload = json.dumps({
+        "state": state, "message": msg, "session_id": session_id, "cwd": cwd, "detail": detail,
+    }).encode()
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
