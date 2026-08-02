@@ -508,19 +508,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         TerminalInjector.activate()
     }
 
+    // The widget is a single card — it can only ever show one session's state
+    // at a time — so with multiple sessions active simultaneously, whichever
+    // one isn't picked here would otherwise go completely invisible on the
+    // widget (its menu bar icon is still correct either way). otherCount
+    // surfaces that as a small "+N" badge instead of silently dropping it.
     private func updateFloatingState() {
-        let all = sessions.values
-        guard !all.isEmpty else {
+        guard !sessions.isEmpty else {
             floatingStore.state = .idle
             floatingStore.message = ""
+            floatingStore.otherCount = 0
             updateAlertPerformance(isWaiting: false)
             return
         }
         let priority: [CompanionState] = [.waiting, .thinking, .done, .sleepy, .idle]
+        let all = sessions.values
         let topState = priority.first { s in all.contains { $0.store.state == s } } ?? .idle
-        let topSession = all.first { $0.store.state == topState }
+        // Ties (multiple sessions sharing topState) are broken by session id,
+        // not by iterating `sessions.values` directly — a Dictionary's value
+        // order isn't guaranteed, so without a stable tie-break the message
+        // shown could flicker between sessions across otherwise-unrelated
+        // updates.
+        let topId = sessions.keys.filter { sessions[$0]?.store.state == topState }.sorted().first
+        let topSession = topId.flatMap { sessions[$0] }
         floatingStore.state = topState
         floatingStore.message = topSession?.store.message ?? ""
+        floatingStore.otherCount = max(0, sessions.count - 1)
         updateAlertPerformance(isWaiting: topState == .waiting)
     }
 

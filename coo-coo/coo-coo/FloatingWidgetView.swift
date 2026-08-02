@@ -4,6 +4,9 @@ import AppKit
 class FloatingStore: ObservableObject {
     @Published var state: CompanionState = .idle
     @Published var message: String = ""
+    // Sessions other than the one currently shown — the widget is a single
+    // card and can only display one session at a time.
+    @Published var otherCount: Int = 0
 }
 
 extension Notification.Name {
@@ -52,9 +55,27 @@ struct FloatingWidgetView: View {
                     radius: store.state == .waiting ? 6 + 5 * pulse : 6,
                     y: 3
                 )
+                .overlay(alignment: .topTrailing) {
+                    if store.otherCount > 0 {
+                        otherSessionsBadge(size: 14, fontSize: 8)
+                            .offset(x: 3, y: -3)
+                    }
+                }
         }
         .padding(14)
         .onTapGesture { isMinimized = false }
+    }
+
+    // Small "+N" pill for other sessions the single-card widget can't show
+    // at the same time as the one currently displayed.
+    private func otherSessionsBadge(size: CGFloat, fontSize: CGFloat) -> some View {
+        Text("+\(store.otherCount)")
+            .font(.system(size: fontSize, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(minWidth: size, minHeight: size)
+            .padding(.horizontal, size > 14 ? 6 : 2)
+            .background(Capsule().fill(Color.black.opacity(0.55)))
+            .help("\(store.otherCount) other session\(store.otherCount == 1 ? "" : "s") active")
     }
 
     // MARK: - Expanded
@@ -73,6 +94,10 @@ struct FloatingWidgetView: View {
         VStack(spacing: 0) {
             // Minimize row
             HStack {
+                if store.otherCount > 0 {
+                    otherSessionsBadge(size: 16, fontSize: 9)
+                        .padding(.leading, 10)
+                }
                 Spacer()
                 Image(systemName: "minus")
                     .font(.system(size: 11, weight: .bold))
