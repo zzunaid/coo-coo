@@ -7,8 +7,10 @@ the pigeon — animated, makes a coo sound, lives in the menu bar
 and optionally as a floating widget on screen.
 
 ## Key architectural decisions
-- **Standalone Mac app** — no phone, no WebSocket, no shared 
-  infrastructure with any other project.
+- **Standalone Mac app today** — no phone, no WebSocket, no shared
+  infrastructure with any other project. A companion iOS/watchOS app is a
+  real but deliberately-deferred P2 idea — see Roadmap below — not a
+  contradiction of this line; it just hasn't been started.
 - **Uses Claude Code hooks for state detection** — not PTY parsing. 
   The Notification, Stop, PreToolUse, and UserPromptSubmit hooks in 
   ~/.claude/settings.json call a small Python script that sends 
@@ -40,7 +42,77 @@ and optionally as a floating widget on screen.
 - Notification filtering — only `permission_prompt` fires an alert; `idle_prompt` and generic "waiting for input" messages are suppressed (`coocoo-notify.py`)
 - Distribution — landing page (`docs/index.html`, GitHub Pages), email capture (Formspree), analytics (GA4/Firebase, reusing the app's Firebase project), MIT `LICENSE`
 
-Nothing currently planned beyond the above — see below on the iOS companion.
+### Roadmap
+
+**P0 — current release, already committed locally (unreleased)**
+- Session crash-leak reap: sessions that die without ever firing the `Stop`
+  hook now auto-clear after 30 min instead of leaking a menu bar icon
+  forever (`AppDelegate.swift`, `sessionReapInterval`)
+- Floating widget multi-session fix: deterministic tie-break when 2+
+  sessions share the top-priority state (was flicker-prone `Dictionary`
+  iteration order), plus a "+N" badge so other simultaneously-active
+  sessions aren't silently invisible (`updateFloatingState()`,
+  `FloatingWidgetView.swift`)
+
+**P1 — near-term, builds on what's shipped, contained scope**
+- Notification content image: one consistent generic image (not
+  per-character) attached to every notification. A per-character version
+  was built and verified working, then reverted — the user didn't like how
+  it looked. Simpler version: one static asset, not rendered per character.
+- Better "Walk" alert-style animations — richer motion for the existing
+  Walk alert style (see `AlertPerformance.swift` / the "Alert Style (Walk /
+  Hang)" section of `AppDelegate.swift`)
+- Auto-updates (Sparkle or a lightweight custom check) so people aren't
+  stuck manually re-downloading DMGs every release
+- Extended mode: show project name + more Claude Code task detail. Partly
+  already there — `PopoverView.swift:46-47` already shows `displayCwd`
+  (project folder name), but `FloatingWidgetView.swift` doesn't. Hook
+  payloads already carry more than what's surfaced today — `tool_input`
+  (not just `tool_name`), and `last_assistant_message` on the Stop hook
+  (seen in `~/.coocoo/hook.log`) — so this is mostly a UI/wiring job, not
+  new data collection. Likely shape: a toggle-able "extended" view showing
+  project name in the widget too, the actual command/tool_input instead of
+  just the tool name, and a snippet of the last assistant message on done.
+- **Remove Firebase Analytics** (`Analytics.swift`, `GoogleService-Info.plist`,
+  the Firebase SPM packages) — it's the one exception to "no third-party
+  Swift dependencies" (see Key architectural decisions above). Not a
+  contradiction of the Growth section below — growth here means visibility
+  (README, GitHub, posting where users already are), not usage tracking, so
+  dropping Firebase and pursuing growth are independent decisions. "Review
+  GA4/Firebase analytics for usage" was considered and dropped for this
+  reason — moot once Firebase Analytics is gone.
+
+**P2 — big bet, long horizon, real but not started**
+- iOS companion app (Live Activity, Dynamic Island, push notifications —
+  the alert follows you off your Mac)
+- watchOS companion/complication
+- WidgetKit home-screen/lock-screen widgets
+- Real cost, not just unstarted work: Apple Developer Program enrollment
+  ($99/yr, currently unnecessary since the Mac app distributes outside the
+  App Store), APNs infrastructure, App Store review, and 2-3 more
+  codebases to maintain forever. This is why it's P2, not P0/P1 — see Key
+  architectural decisions above.
+
+**Growth — separate axis from P0/P1/P2 above, tiered by effort not priority.**
+For a tool this narrow (Claude Code users, Mac only), growth is about
+visibility to an audience that already exists, not broad marketing.
+
+- *Highest-leverage, cheapest:*
+  - Demo GIF/video at the top of the README, showing the alert firing in
+    real use (menu bar icon animating, floating widget reacting) — people
+    star what they can see working in 3 seconds without cloning anything
+  - Post where Claude Code users already are: Show HN, r/ClaudeAI, Anthropic
+    Discord/community, X/Twitter with the same clip
+  - GitHub repo polish: topics/tags (`claude-code`, `macos`,
+    `menu-bar-app`), a punchy one-line description, a license badge
+- *Medium effort:*
+  - Homebrew cask (`brew install --cask coocoo`) — doesn't drive discovery,
+    lowers friction for people who already found it
+  - Get listed in any "awesome-claude-code" / Claude Code resource lists on
+    GitHub
+- *Lower priority for this project's shape:*
+  - Landing page SEO — traffic will come from GitHub/social, not search,
+    for a tool like this
 
 ## Spec docs
 - `docs/00-overview.md` — architecture, character system, state enum
@@ -52,9 +124,12 @@ Nothing currently planned beyond the above — see below on the iOS companion.
 **Note on scope**: these spec docs describe a larger cross-platform vision
 (companion iOS app, APNs push, Bonjour pairing, Dynamic Island/Live
 Activities) from before the project was deliberately scoped down to a
-standalone Mac app (see Key architectural decisions above). That iOS/APNs
-direction is dead, not just unstarted — don't treat it as a pending roadmap
-item.
+standalone Mac app (see Key architectural decisions above). That direction
+is back on the table as the P2 item in the Roadmap above, but a real iOS
+spec doc was never actually written — `02-ios-rn-app-spec.md`, referenced
+in `00-overview.md`'s project structure, doesn't exist. Don't assume it's
+fleshed out; treat the iOS/Watch/widget vision as a diagram and a few
+paragraphs, not a ready-to-build spec.
 
 ## Conventions
 - Swift 5.9+, target macOS 14 Sonoma minimum
