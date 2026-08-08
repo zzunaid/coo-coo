@@ -49,10 +49,6 @@ widget multi-session fix — both shipped in `v1.2.2`. P0 means "committed
 locally, not yet released"; empty until the next batch exists.)
 
 **P1 — near-term, builds on what's shipped, contained scope**
-- ~~Extended mode~~ — shipped in `v1.3.0` (project name + richer task
-  detail — actual command/file instead of generic tool name, a snippet of
-  Claude's last message on done — toggle in Preferences > Widget, off by
-  default).
 - **Auto-updates — in progress.** Went with Sparkle over the lightweight
   custom-check alternative. CooCoo is sandboxed
   (`com.apple.security.app-sandbox = YES`), so this isn't just adding the
@@ -99,10 +95,6 @@ For a tool this narrow (Claude Code users, Mac only), growth is about
 visibility to an audience that already exists, not broad marketing.
 
 - *Highest-leverage, cheapest:*
-  - ~~Demo GIF/video at the top of the README~~ — done, `docs/demo.gif`,
-    linked from `README.md`
-  - ~~LinkedIn post~~ — done, live (~2,996 impressions, 3 comments as of
-    last check)
   - Reddit post — copy drafted, video ready
     (`~/Desktop/coocoo-demo-social.mp4`), not yet posted. r/ClaudeAI has a
     "Built with Claude" flair that fits, but gates Showcase posts on a
