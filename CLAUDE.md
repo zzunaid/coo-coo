@@ -44,17 +44,29 @@ and optionally as a floating widget on screen.
 
 ### Roadmap
 
-**P0 — current release, already committed locally (unreleased)**
-- Session crash-leak reap: sessions that die without ever firing the `Stop`
-  hook now auto-clear after 30 min instead of leaking a menu bar icon
-  forever (`AppDelegate.swift`, `sessionReapInterval`)
-- Floating widget multi-session fix: deterministic tie-break when 2+
-  sessions share the top-priority state (was flicker-prone `Dictionary`
-  iteration order), plus a "+N" badge so other simultaneously-active
-  sessions aren't silently invisible (`updateFloatingState()`,
-  `FloatingWidgetView.swift`)
+**P0 — nothing currently staged.** (Was: session crash-leak reap + floating
+widget multi-session fix — both shipped in `v1.2.2`. P0 means "committed
+locally, not yet released"; empty until the next batch exists.)
 
 **P1 — near-term, builds on what's shipped, contained scope**
+- ~~Extended mode~~ — shipped in `v1.3.0` (project name + richer task
+  detail — actual command/file instead of generic tool name, a snippet of
+  Claude's last message on done — toggle in Preferences > Widget, off by
+  default).
+- **Auto-updates — in progress.** Went with Sparkle over the lightweight
+  custom-check alternative. CooCoo is sandboxed
+  (`com.apple.security.app-sandbox = YES`), so this isn't just adding the
+  package — Sparkle's sandboxed-app support needs two additional XPC
+  Service targets (Installer, Downloader) that do the actual privileged
+  install step out-of-process, since a sandboxed app can't replace its own
+  bundle directly. Steps: (1) user adds the Sparkle SPM package + the two
+  XPC targets in Xcode — can't be done by hand-editing project.pbxproj
+  safely; (2) Claude writes the updater integration code, Info.plist keys,
+  "Check for Updates…" menu item; (3) generate an EdDSA signing key pair,
+  private key stays out of the repo, public key gets embedded; (4) host an
+  `appcast.xml` on GitHub Pages alongside the landing page, fold "sign the
+  DMG + update the appcast" into the release process below once that
+  exists.
 - Notification content image: one consistent generic image (not
   per-character) attached to every notification. A per-character version
   was built and verified working, then reverted — the user didn't like how
@@ -62,17 +74,6 @@ and optionally as a floating widget on screen.
 - Better "Walk" alert-style animations — richer motion for the existing
   Walk alert style (see `AlertPerformance.swift` / the "Alert Style (Walk /
   Hang)" section of `AppDelegate.swift`)
-- Auto-updates (Sparkle or a lightweight custom check) so people aren't
-  stuck manually re-downloading DMGs every release
-- Extended mode: show project name + more Claude Code task detail. Partly
-  already there — `PopoverView.swift:46-47` already shows `displayCwd`
-  (project folder name), but `FloatingWidgetView.swift` doesn't. Hook
-  payloads already carry more than what's surfaced today — `tool_input`
-  (not just `tool_name`), and `last_assistant_message` on the Stop hook
-  (seen in `~/.coocoo/hook.log`) — so this is mostly a UI/wiring job, not
-  new data collection. Likely shape: a toggle-able "extended" view showing
-  project name in the widget too, the actual command/tool_input instead of
-  just the tool name, and a snippet of the last assistant message on done.
 - **Remove Firebase Analytics** (`Analytics.swift`, `GoogleService-Info.plist`,
   the Firebase SPM packages) — it's the one exception to "no third-party
   Swift dependencies" (see Key architectural decisions above). Not a
@@ -98,13 +99,19 @@ For a tool this narrow (Claude Code users, Mac only), growth is about
 visibility to an audience that already exists, not broad marketing.
 
 - *Highest-leverage, cheapest:*
-  - Demo GIF/video at the top of the README, showing the alert firing in
-    real use (menu bar icon animating, floating widget reacting) — people
-    star what they can see working in 3 seconds without cloning anything
-  - Post where Claude Code users already are: Show HN, r/ClaudeAI, Anthropic
-    Discord/community, X/Twitter with the same clip
+  - ~~Demo GIF/video at the top of the README~~ — done, `docs/demo.gif`,
+    linked from `README.md`
+  - ~~LinkedIn post~~ — done, live (~2,996 impressions, 3 comments as of
+    last check)
+  - Reddit post — copy drafted, video ready
+    (`~/Desktop/coocoo-demo-social.mp4`), not yet posted. r/ClaudeAI has a
+    "Built with Claude" flair that fits, but gates Showcase posts on a
+    minimum account karma — check current karma before posting, or post to
+    r/macapps / r/SideProject first (no karma gate) while building karma
+    there in parallel
   - GitHub repo polish: topics/tags (`claude-code`, `macos`,
-    `menu-bar-app`), a punchy one-line description, a license badge
+    `menu-bar-app`), a punchy one-line description, a license badge — not
+    yet done
 - *Medium effort:*
   - Homebrew cask (`brew install --cask coocoo`) — doesn't drive discovery,
     lowers friction for people who already found it
